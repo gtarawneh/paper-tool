@@ -31,15 +31,20 @@ def runScreen(content, scr):
 
 		if (c == 10):
 			return
-
-		query = query[:-1] if (c == 127) else query + unichr(c)
+		elif (c == curses.KEY_RESIZE):
+			scr.clear()
+			hw = scr.getmaxyx();
+			W = hw[1] - 5;
+			H = hw[0];
+		else:
+			query = query[:-1] if (c == 127) else query + unichr(c)
 
 		keys = query.split(' ')
 
 		scr.addstr(H - 1, 0, ' ' * W);
 		scr.addstr(H - 1, 0, "keywords: " + ",".join(keys), curses.color_pair(1) + curses.A_BOLD)
 
-		suggestions = getSuggestions(content, [keys[0]], 100000);
+		suggestions = getSuggestions(content, [keys[0]], maxSuggestions);
 
 		n0 = len(suggestions)
 
