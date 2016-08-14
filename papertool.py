@@ -14,39 +14,85 @@ def getContent():
 def runScreen(content, scr):
 	curses.use_default_colors()
 	curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE);
+	curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE);
 	query = '';
-
-	hw = scr.getmaxyx();
-	W = hw[1] - 5;
-	H = hw[0];
-
-	maxSuggestions = H - 10;
 
 	cache = {}
 
 	oldQuery = "";
+	suggestions = []
+	keys = []
 
-	queryLine = H - 2;
+	searchedLines = 0
+	nMatches = 0
+
+	queryStyle = curses.color_pair(2) + curses.A_BOLD
+	statusStyle = curses.color_pair(2) + curses.A_BOLD
+
+	initScreen = True
+	n = 0
 
 	while True:
 
-		scr.addstr(queryLine, 0, ' ' * W);
-		scr.addstr(queryLine, 0, '> ' + query, curses.color_pair(1) + curses.A_BOLD)
+		if initScreen:
+
+			scr.clear()
+			hw = scr.getmaxyx()
+			W = hw[1]
+			H = hw[0]
+
+			suggestionLines = range(0, H - 5);
+
+			queryLine = H - 1;
+			statusLine1 = H - 4;
+			statusLine2 = H - 3;
+			maxSuggestions = len(suggestionLines);
+
+			def clearLine(i): scr.addstr(i, 0, ' ' * (W));
+
+			def clearQueryLine(): scr.addstr(queryLine, 0, ' ' * (W-1));
+
+			def writeLine(i, str, style):
+				if (i == queryLine):
+					clearQueryLine()
+				else:
+					clearLine(i)
+				scr.addstr(i, 0, str, style)
+
+			def displaySuggestions(suggestions, keys):
+				for i, sug in enumerate(suggestions):
+					if i not in suggestionLines:
+						return
+					sug = content[sug][0:W];
+					scr.addstr(i, 0, sug)
+					for keyword in keys:
+						k = sug.lower().find(keyword.lower())
+						if k > -1:
+							scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
+
+			initScreen = False
+
+		scr.refresh()
+
+		displaySuggestions(suggestions, keys)
+
+		writeLine(statusLine1, "searched: %d, found %d" % (searchedLines, nMatches), statusStyle)
+		writeLine(statusLine2, 'keyword: ' + ",".join(keys), statusStyle)
+
+		writeLine(queryLine, '> ' + query, queryStyle)
 
 		c = scr.getch()
 
 		if (c == 10):
 			return
 		elif (c == curses.KEY_RESIZE):
-			scr.clear()
-			hw = scr.getmaxyx();
-			W = hw[1] - 5;
-			H = hw[0];
+			initScreen = True
+			continue
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
 
-		for i in range(0, H - 5):
-			scr.addstr(i, 0, ' ' * W)
+		for i in suggestionLines:
+			clearLine(i)
 
 		if (query == oldQuery) | (len(query) < 4):
 			continue
@@ -54,9 +100,6 @@ def runScreen(content, scr):
 		oldQuery = query
 
 		keys = query.split(' ')
-
-		scr.addstr(H - 3, 0, ' ' * W);
-		scr.addstr(H - 3, 0, "keywords: " + ",".join(keys), curses.color_pair(1) + curses.A_BOLD)
 
 		fullList = range(0, len(content))
 
@@ -75,22 +118,6 @@ def runScreen(content, scr):
 		suggestions = suggestions[:maxSuggestions];
 
 		n = len(suggestions);
-
-		scr.addstr(H - 5, 0, ' ' * W);
-		scr.addstr(H - 5, 0, "searched: %d, found %d" % (searchedLines, nMatches), curses.color_pair(1) + curses.A_BOLD)
-
-		n = n if (n < maxSuggestions) else maxSuggestions
-
-		for i in range(0, n):
-			sug = content[suggestions[i]][0:W];
-			scr.addstr(i, 0, sug)
-			for keyword in keys:
-				k = sug.lower().find(keyword.lower())
-				if k > -1:
-					scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
-
-
-	scr.refresh()
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
@@ -116,8 +143,6 @@ def printSuggestions(content, key):
 def main2():
 
 	content =  getContent();
-	# printSuggestions(content, "reichardt".split(' '))
-	# return
 
 	scr = curses.initscr()
 	curses.start_color()
