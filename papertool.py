@@ -15,21 +15,16 @@ def runScreen(content, scr):
 	curses.use_default_colors()
 	curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 	curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
-
 	query = ''
 	cache = {}
 	suggestions = []
 	keys = []
 	searchedLines = 0
 	nMatches = 0
-
 	queryStyle = curses.color_pair(2) + curses.A_BOLD
 	statusStyle = curses.color_pair(2) + curses.A_BOLD
-
 	initScreen = True
-
 	while True:
-
 		if initScreen:
 			scr.clear()
 			hw = scr.getmaxyx()
@@ -41,18 +36,14 @@ def runScreen(content, scr):
 			statusLine2 = H - 3
 			maxSuggestions = len(suggestionLines)
 			initScreen = False
-
 			def clearLine(i): scr.addstr(i, 0, ' ' * (W))
-
 			def clearQueryLine(): scr.addstr(queryLine, 0, ' ' * (W-1))
-
 			def writeLine(i, str, style):
 				if (i == queryLine):
 					clearQueryLine()
 				else:
 					clearLine(i)
 				scr.addstr(i, 0, str, style)
-
 			def displaySuggestions(suggestions, keys):
 				for i in suggestionLines:
 					clearLine(i)
@@ -65,14 +56,12 @@ def runScreen(content, scr):
 						k = sug.lower().find(keyword.lower())
 						if k > -1:
 							scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
-
 		# update display content:
 		scr.refresh()
 		displaySuggestions(suggestions, keys)
 		writeLine(statusLine1, "searched: %d, found %d" % (searchedLines, len(suggestions)), statusStyle)
 		writeLine(statusLine2, 'keyword: ' + ",".join(keys), statusStyle)
 		writeLine(queryLine, '> ' + query, queryStyle)
-
 		# grab and process input:
 		c = scr.getch()
 		if c == 10:
@@ -82,7 +71,6 @@ def runScreen(content, scr):
 			continue
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
-
 		# run query:
 		if len(query) > 4:
 			keys = query.split(' ')
@@ -110,15 +98,12 @@ def printSuggestions(content, key):
 		print(s)
 
 def main2():
-
 	content =  getContent()
-
 	scr = curses.initscr()
 	curses.start_color()
 	curses.noecho()
 	curses.cbreak
 	scr.keypad(1)
-
 	try:
 		runScreen(content, scr)
 	except Exception as err:
@@ -128,7 +113,6 @@ def main2():
 		curses.endwin()
 		traceback.print_exc(file=sys.stdout)
 		return
-
 	curses.nocbreak()
 	scr.keypad(0)
 	curses.echo()
