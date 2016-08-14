@@ -27,9 +27,7 @@ def runScreen(content, scr):
 	while True:
 		if initScreen:
 			scr.clear()
-			hw = scr.getmaxyx()
-			W = hw[1]
-			H = hw[0]
+			H, W = scr.getmaxyx()
 			suggestionLines = range(0, H - 5)
 			queryLine = H - 1
 			statusLine1 = H - 4
@@ -68,15 +66,14 @@ def runScreen(content, scr):
 			return
 		elif c == curses.KEY_RESIZE:
 			initScreen = True
-			continue
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
-		# run query:
-		if len(query) > 4:
-			keys = query.split(' ')
-			subList = cache.get(query[:-1], range(0, len(content)))
-			suggestions, searchedLines = getSuggestions(content, subList, keys, 1000000)
-			cache[query] = suggestions
+			# run query:
+			if len(query) > 4:
+				keys = query.split(' ')
+				subList = cache.get(query[:-1], range(0, len(content)))
+				suggestions, searchedLines = getSuggestions(content, subList, keys, 1000000)
+				cache[query] = suggestions
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
