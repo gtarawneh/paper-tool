@@ -3,6 +3,7 @@
 import sys
 import traceback
 import curses
+import math
 
 filename = 'sentences.txt'
 
@@ -21,8 +22,9 @@ def runScreen(content, scr):
 	suggestions = []
 	keys = []
 	searchedLines = 0
-	nMatches = 0
 	selected = 0
+	page = 0
+	pages = 0
 	queryStyle = curses.color_pair(2) + curses.A_BOLD
 	statusStyle = curses.color_pair(2) + curses.A_BOLD
 	initScreen = True
@@ -38,7 +40,8 @@ def runScreen(content, scr):
 	def displaySuggestions():
 		for i in suggestionLines:
 			clearLine(i)
-		for i, sug in enumerate(suggestions):
+		startIndex = len(suggestionLines) * page
+		for i, sug in enumerate(suggestions[startIndex:]):
 			if i not in suggestionLines:
 				break
 			sug = content[sug][0:W]
@@ -49,8 +52,9 @@ def runScreen(content, scr):
 					scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
 	def highlightSuggestion():
 		if suggestions:
+			absSelected = len(suggestionLines) * page + selected
 			clearLine(selected)
-			line = content[suggestions[selected]][0:W]
+			line = content[suggestions[absSelected]][0:W]
 			scr.addstr(selected, 0, line, curses.color_pair(3))
 	# main loop
 	while True:
@@ -66,7 +70,9 @@ def runScreen(content, scr):
 		# update display content:
 		scr.refresh()
 		displaySuggestions()
-		writeLine(statusLine1, "searched: %d, found %d" % (searchedLines, len(suggestions)), statusStyle)
+		pages = math.ceil(float(len(suggestions)) / len(suggestionLines))
+		absSelected = len(suggestionLines) * page + selected
+		writeLine(statusLine1, "(%d / %d) [%d / %d]" % (absSelected + 1, len(suggestions), page + 1, pages), statusStyle)
 		writeLine(statusLine2, 'keyword: ' + ",".join(keys), statusStyle)
 		writeLine(queryLine, '> ' + query, queryStyle)
 		highlightSuggestion()
@@ -77,11 +83,23 @@ def runScreen(content, scr):
 		elif c == curses.KEY_RESIZE:
 			initScreen = True
 		elif c == curses.KEY_DOWN:
-			selected = (selected + 1) if (selected < suggestionLines[-1]) else selected
-			highlightSuggestion()
+			if absSelected < len(suggestions)-1:
+				if selected == suggestionLines[-1]:
+					page += 1
+					selected = 0
+					initScreen = True
+				else:
+					selected += 1
+					highlightSuggestion()
 		elif c == curses.KEY_UP:
-			selected = (selected - 1) if (selected > 0) else selected
-			highlightSuggestion()
+			if selected == 0:
+				if page > 0:
+					page -= 1
+					selected = len(suggestionLines) - 1
+					initScreen = True
+			else:
+				selected -= 1
+				highlightSuggestion()
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
 			# run query:
