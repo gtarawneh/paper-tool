@@ -15,12 +15,14 @@ def runScreen(content, scr):
 	curses.use_default_colors()
 	curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 	curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
+	curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_RED)
 	query = ''
 	cache = {}
 	suggestions = []
 	keys = []
 	searchedLines = 0
 	nMatches = 0
+	selected = 0
 	queryStyle = curses.color_pair(2) + curses.A_BOLD
 	statusStyle = curses.color_pair(2) + curses.A_BOLD
 	initScreen = True
@@ -47,25 +49,37 @@ def runScreen(content, scr):
 					clearLine(i)
 				for i, sug in enumerate(suggestions):
 					if i not in suggestionLines:
-						return
+						break
 					sug = content[sug][0:W]
 					scr.addstr(i, 0, sug)
 					for keyword in keys:
 						k = sug.lower().find(keyword.lower())
 						if k > -1:
 							scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
+			def highlightSuggestion(selected):
+				if suggestions:
+					clearLine(selected)
+					line = content[suggestions[selected]][0:W]
+					scr.addstr(selected, 0, line, curses.color_pair(3))
 		# update display content:
 		scr.refresh()
 		displaySuggestions(suggestions, keys)
 		writeLine(statusLine1, "searched: %d, found %d" % (searchedLines, len(suggestions)), statusStyle)
 		writeLine(statusLine2, 'keyword: ' + ",".join(keys), statusStyle)
 		writeLine(queryLine, '> ' + query, queryStyle)
+		highlightSuggestion(selected)
 		# grab and process input:
 		c = scr.getch()
 		if c == 10:
 			return
 		elif c == curses.KEY_RESIZE:
 			initScreen = True
+		elif c == curses.KEY_DOWN:
+			selected = (selected + 1) if (selected < suggestionLines[-1]) else selected
+			highlightSuggestion(selected)
+		elif c == curses.KEY_UP:
+			selected = (selected - 1) if (selected > 0) else selected
+			highlightSuggestion(selected)
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
 			# run query:
