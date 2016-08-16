@@ -60,7 +60,6 @@ def runScreen(content, scr):
 	# main loop
 	while True:
 		if initScreen:
-			scr.clear()
 			H, W = scr.getmaxyx()
 			suggestionLines = range(0, H - 5)
 			queryLine = H - 1
@@ -88,29 +87,17 @@ def runScreen(content, scr):
 			initScreen = True
 		elif c == curses.KEY_DOWN:
 			if absSelected < len(suggestions)-1:
-				if selected == suggestionLines[-1]:
-					page += 1
-					selected = 0
-					initScreen = True
-				else:
-					selected += 1
-					highlightSuggestion()
+				absSelected += 1
+				initScreen = True
 		elif c == curses.KEY_UP:
-			if selected == 0:
-				if page > 0:
-					page -= 1
-					selected = len(suggestionLines) - 1
-					initScreen = True
-			else:
-				selected -= 1
-				highlightSuggestion()
+			if absSelected > 0:
+				absSelected -= 1
+				initScreen = True
 		elif c == curses.KEY_NPAGE:
 			if page < pages-1:
-				page += 1
+				absSelected += len(suggestionLines)
+				absSelected = min(absSelected, len(suggestions)-1)
 				initScreen = True
-				newAbsSelected = len(suggestionLines) * page + selected
-				if newAbsSelected >= len(suggestions)-1:
-					selected = len(suggestions) % len(suggestionLines) - 1
 		elif c == curses.KEY_END:
 			prevLines = len(suggestionLines) * page
 			remainingLines = len(suggestions) - prevLines
@@ -119,7 +106,7 @@ def runScreen(content, scr):
 			selected = 0
 		elif c == curses.KEY_PPAGE:
 			if page > 0:
-				page -= 1
+				absSelected -= len(suggestionLines)
 				initScreen = True
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
