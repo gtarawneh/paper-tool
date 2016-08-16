@@ -100,6 +100,17 @@ def runScreen(content, scr):
 			else:
 				selected -= 1
 				highlightSuggestion()
+		elif c == curses.KEY_NPAGE:
+			if page < pages-1:
+				page += 1
+				initScreen = True
+				newAbsSelected = len(suggestionLines) * page + selected
+				if newAbsSelected >= len(suggestions)-1:
+					selected = len(suggestions) % len(suggestionLines) - 1
+		elif c == curses.KEY_PPAGE:
+			if page > 0:
+				page -= 1
+				initScreen = True
 		else:
 			query = query[:-1] if (c == 127) else query + unichr(c)
 			# run query:
