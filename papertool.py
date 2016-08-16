@@ -25,6 +25,7 @@ def runScreen(content, scr):
 	selected = 0
 	page = 0
 	pages = 0
+	absSelected = 0
 	queryStyle = curses.color_pair(2) + curses.A_BOLD
 	statusStyle = curses.color_pair(2) + curses.A_BOLD
 	initScreen = True
@@ -67,6 +68,9 @@ def runScreen(content, scr):
 			statusLine2 = H - 3
 			maxSuggestions = len(suggestionLines)
 			initScreen = False
+			# work out new page and selected values of current highligh
+			page = int(math.floor(float(absSelected) / len(suggestionLines)))
+			selected = absSelected % len(suggestionLines)
 		# update display content:
 		scr.refresh()
 		displaySuggestions()
