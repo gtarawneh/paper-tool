@@ -13,6 +13,7 @@ class Console:
 	page = 0
 	pages = 0
 	absSelected = 0
+	querLine = 0
 	W = 0
 	H = 0
 	scr = None
@@ -64,32 +65,37 @@ class Console:
 			line = content[self.suggestions[self.absSelected]][0:self.W]
 			self.scr.addstr(self.selected, 0, line, curses.color_pair(3))
 
-	def loopConsole(self, content, getSuggestionFunc):
+	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
+		self.clearLine(self.queryLine)
+		rightSide = "(%d / %d) [%d / %d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
+		rightInd = self.W - 1 - len(rightSide)
+		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
+		self.scr.addstr(self.queryLine, 0, '> ' + self.query, queryStyle)
+
+	def loopConsole(self, content, getSuggestionFunc):
 		initScreen = True
 		self.absSelected = 0
 		# main loop
 		while True:
 			if initScreen:
+				# self.scr.clear()
 				self.H, self.W = self.scr.getmaxyx()
-				self.suggestionLines = range(0, self.H - 5)
-				queryLine = self.H - 1
-				statusLine1 = self.H - 4
-				statusLine2 = self.H - 3
+				self.suggestionLines = range(0, self.H - 2)
+				self.queryLine = self.H - 1
 				maxSuggestions = len(self.suggestionLines)
 				initScreen = False
 				# work out new page and selected values of current highligh
 				self.page = int(math.floor(float(self.absSelected) / len(self.suggestionLines)))
 				self.selected = self.absSelected % len(self.suggestionLines)
 			# update display content:
+			self.scr.hline(self.H-2, 0, "-", self.W)
 			self.scr.refresh()
 			self.displaySuggestions(content, self.keys)
 			self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
 			self.absSelected = len(self.suggestionLines) * self.page + self.selected
-			self.writeLine(statusLine1, "(%d / %d) [%d / %d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages), statusStyle)
-			self.writeLine(statusLine2, 'keyword: ' + ",".join(self.keys), statusStyle)
-			self.writeLine(queryLine, '> ' + self.query, queryStyle)
+			self.writeQueryLine()
 			self.highlightSuggestion(content)
 			# grab and process input:
 			c = self.scr.getch()
