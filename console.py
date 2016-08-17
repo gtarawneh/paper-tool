@@ -4,7 +4,7 @@ import math
 
 class Console:
 
-	query = 'motion vision'
+	query = ''
 	cache = {}
 	suggestions = []
 	keys = []
@@ -77,6 +77,7 @@ class Console:
 	def loopConsole(self, content, getSuggestionFunc):
 		initScreen = True
 		self.absSelected = 0
+		self.suggestions = range(0, len(content))
 		# main loop
 		while True:
 			self.scr.leaveok(True)
@@ -105,12 +106,14 @@ class Console:
 				return
 			elif c == curses.KEY_RESIZE:
 				initScreen = True
-			elif c == curses.KEY_DOWN and (self.absSelected < len(self.suggestions)-1):
-				self.absSelected += 1
-				initScreen = True
-			elif c == curses.KEY_UP and self.absSelected > 0:
-				self.absSelected -= 1
-				initScreen = True
+			elif c == curses.KEY_DOWN:
+				if self.absSelected < len(self.suggestions)-1:
+					self.absSelected += 1
+					initScreen = True
+			elif c == curses.KEY_UP:
+				if self.absSelected > 0:
+					self.absSelected -= 1
+					initScreen = True
 			elif c == curses.KEY_NPAGE:
 				if self.selected < len(self.suggestionLines)-1:
 					# not at end of current page
