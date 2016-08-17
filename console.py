@@ -46,15 +46,16 @@ class Console:
 		for i in self.suggestionLines:
 			self.clearLine(i)
 		startIndex = len(self.suggestionLines) * self.page
-		for i, sug in enumerate(self.suggestions[startIndex:]):
+		for i, sugInd in enumerate(self.suggestions[startIndex:]):
 			if i not in self.suggestionLines:
 				break
-			sug = content[sug][0:self.W]
+			sug = content[sugInd][0:self.W]
 			self.scr.addstr(i, 0, sug)
 			for keyword in keys:
 				k = sug.lower().find(keyword.lower())
 				if k > -1:
-					self.scr.addstr(i, k, keyword, curses.color_pair(1) + curses.A_BOLD)
+					keywordCase = content[sugInd][k:k+len(keyword)]
+					self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
 
 	def highlightSuggestion(self, content):
 		if self.suggestions:
