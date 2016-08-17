@@ -79,6 +79,7 @@ class Console:
 		self.absSelected = 0
 		# main loop
 		while True:
+			self.scr.leaveok(True)
 			if initScreen:
 				# self.scr.clear()
 				self.H, self.W = self.scr.getmaxyx()
@@ -95,8 +96,9 @@ class Console:
 			self.displaySuggestions(content, self.keys)
 			self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
 			self.absSelected = len(self.suggestionLines) * self.page + self.selected
-			self.writeQueryLine()
 			self.highlightSuggestion(content)
+			self.scr.leaveok(False)
+			self.writeQueryLine()
 			# grab and process input:
 			c = self.scr.getch()
 			if c == 10:
