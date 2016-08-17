@@ -143,3 +143,5 @@ class Console:
 					subList = self.cache.get(self.query[:-1], range(0, len(content)))
 					self.suggestions = getSuggestionFunc(content, subList, self.keys, 1000000)
 					self.cache[self.query] = self.suggestions
+					self.absSelected = 0
+					initScreen = True
