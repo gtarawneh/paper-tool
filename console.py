@@ -103,27 +103,36 @@ class Console:
 				return
 			elif c == curses.KEY_RESIZE:
 				initScreen = True
-			elif c == curses.KEY_DOWN:
-				if self.absSelected < len(self.suggestions)-1:
-					self.absSelected += 1
-					initScreen = True
-			elif c == curses.KEY_UP:
-				if self.absSelected > 0:
-					self.absSelected -= 1
-					initScreen = True
+			elif c == curses.KEY_DOWN and (self.absSelected < len(self.suggestions)-1):
+				self.absSelected += 1
+				initScreen = True
+			elif c == curses.KEY_UP and self.absSelected > 0:
+				self.absSelected -= 1
+				initScreen = True
 			elif c == curses.KEY_NPAGE:
-				if self.page < self.pages-1:
+				if self.selected < len(self.suggestionLines)-1:
+					# not at end of current page
+					prevLines = len(self.suggestionLines) * self.page
+					remainingLines = len(self.suggestions) - prevLines
+					self.selected = min(len(self.suggestionLines)-1, remainingLines-1)
+				elif self.page < self.pages-1:
+					# end of current page (and further page exists)
 					self.absSelected += len(self.suggestionLines)
 					self.absSelected = min(self.absSelected, len(self.suggestions)-1)
 					initScreen = True
 			elif c == curses.KEY_END:
-				prevLines = len(self.suggestionLines) * self.page
-				remainingLines = len(self.suggestions) - prevLines
-				self.selected = min(len(self.suggestionLines)-1, remainingLines-1)
+				self.absSelected = len(self.suggestions) - 1
+				initScreen = True
 			elif c == curses.KEY_HOME:
-				self.selected = 0
+				self.absSelected = 0
+				initScreen = True
 			elif c == curses.KEY_PPAGE:
-				if self.page > 0:
+				if self.selected > 0:
+					# not on top of current page
+					self.absSelected -= self.selected
+					initScreen = True
+				elif self.page > 0:
+					# on top of current page (and previous page exists)
 					self.absSelected -= len(self.suggestionLines)
 					initScreen = True
 			else:
