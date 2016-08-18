@@ -161,6 +161,8 @@ class Console:
 				self.keys = [k.lower() for k in self.query.split(' ')]
 				self.suggestions = []
 				self.scr.timeout(0) # non-blocking
+				self.absSelected = 0
+				initScreen = True
 				searchIndex = 0
 				# run query:
 				# if len(self.query) > 3:
