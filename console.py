@@ -170,6 +170,7 @@ class Console:
 				self.absSelected = 0
 				self.page = 0
 				self.selected = 0
+				self.suggestions = []
 				searchIndex = 0
 			else:
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
