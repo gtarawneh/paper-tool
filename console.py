@@ -109,7 +109,8 @@ class Console:
 			# update display content:
 			currTime = time.time()
 			if (currTime - self.lastDispTime > 0.25) or \
-				len(self.suggestions) >= len(self.suggestionLines):
+				len(self.suggestions) >= len(self.suggestionLines) or \
+				searchIndex == blockEnd:
 				self.displaySuggestions(content, self.keys)
 				self.lastDispTime = currTime
 				self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
