@@ -163,6 +163,13 @@ class Console:
 					# on top of current page (and previous page exists)
 					self.absSelected -= len(self.suggestionLines)
 					self.resizeWindow()
+			elif c == curses.KEY_DC:
+				self.query = ''
+				self.keys = []
+				self.absSelected = 0
+				self.page = 0
+				self.selected = 0
+				searchIndex = 0
 			else:
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
 				self.keys = [k.lower() for k in self.query.split(' ')]
