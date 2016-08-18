@@ -76,6 +76,9 @@ class Console:
 
 	def loopConsole(self, content, getSuggestionFunc):
 		initScreen = True
+		searchIndex = len(content)
+		lcontent = [s.lower() for s in content]
+		keys = []
 		self.absSelected = 0
 		self.suggestions = range(0, len(content))
 		# main loop
@@ -100,10 +103,23 @@ class Console:
 			self.highlightSuggestion(content)
 			self.scr.leaveok(False)
 			self.writeQueryLine()
-			# grab and process input:
+			# grab input
 			c = self.scr.getch()
+			# search (if necessary)
+			blockEnd = min(searchIndex + 10000, len(content))
+			for i in range(searchIndex, blockEnd):
+				line = lcontent[i]
+				matches = [line.find(k) for k in self.keys]
+				if not -1 in matches:
+					self.suggestions.append(i)
+					initScreen = True
+			searchIndex = blockEnd
+			# set input as blocking (only) when search completes
+			self.scr.timeout(-1 if searchIndex == len(content) else 0)
 			if c == 10:
 				return
+			elif c == -1:
+				continue
 			elif c == curses.KEY_RESIZE:
 				initScreen = True
 			elif c == curses.KEY_DOWN:
@@ -142,11 +158,19 @@ class Console:
 					initScreen = True
 			else:
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
+				self.keys = [k.lower() for k in self.query.split(' ')]
+				self.suggestions = []
+				self.scr.timeout(0) # non-blocking
+				searchIndex = 0
 				# run query:
-				if len(self.query) > 4:
-					self.keys = self.query.split(' ')
-					subList = self.cache.get(self.query[:-1], range(0, len(content)))
-					self.suggestions = getSuggestionFunc(content, subList, self.keys, 1000000)
-					self.cache[self.query] = self.suggestions
-					self.absSelected = 0
-					initScreen = True
+				# if len(self.query) > 3:
+				# 	self.keys = self.query.split(' ')
+				# 	subList = self.cache.get(self.query[:-1], range(0, len(content)))
+				# 	self.suggestions = getSuggestionFunc(content, subList, self.keys, 1000000)
+				# 	self.cache[self.query] = self.suggestions
+				# 	self.absSelected = 0
+				# 	initScreen = True
+				# 	searchIndex = 0
+				# else:
+				# 	self.suggestions = range(0, len(content))
+				# 	searchIndex = len(content)
