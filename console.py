@@ -29,6 +29,7 @@ class Console:
 		curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 		curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
 		curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_RED)
+		curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
 
 	def deinit(self):
 		curses.nocbreak()
@@ -50,7 +51,7 @@ class Console:
 		end = min(lastPageEntryIndex, len(self.suggestions))
 		return self.suggestions[start:end]
 
-	def displaySuggestions(self, content, keys):
+	def displaySuggestions(self, content, keys, cinds, pinfo):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
@@ -60,6 +61,12 @@ class Console:
 			self.clearLine(i)
 			lineStyle = curses.color_pair(3 if isHighlight else 0)
 			self.scr.addstr(i, 0, sug, lineStyle)
+			remChars = self.W - len(sug) - 1
+			if remChars > 0:
+				# display line info
+				linfo = pinfo[cinds[sugInd]]
+				infoStr = '(%s, %s)' % (linfo[1], linfo[2])
+				self.scr.addstr(i, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
 			if not isHighlight:
 				for keyword in keys:
 					k = sug.lower().find(keyword.lower())
@@ -73,7 +80,7 @@ class Console:
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
 		self.clearLine(self.queryLine)
-		rightSide = "(%d / %d) [%d / %d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
+		rightSide = "(match %d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
 		self.scr.addstr(self.queryLine, 0, '> ' + self.query, queryStyle)
@@ -88,7 +95,10 @@ class Console:
 		self.selected = self.absSelected % len(self.suggestionLines)
 		self.scr.hline(self.H-2, 0, "-", self.W)
 
-	def loopConsole(self, content, getSuggestionFunc):
+	# content is an array of sentences
+	# cinds is a corresponding array of entries in pinfo
+	# pinfo is a list of tupes (title, authors, year)
+	def loopConsole(self, content, cinds, pinfo):
 		self.resizeWindow()
 		self.lastDispTime = time.time() - 5
 		searchIndex = len(content)
@@ -111,7 +121,7 @@ class Console:
 			if (currTime - self.lastDispTime > 0.25) or \
 				len(self.suggestions) >= len(self.suggestionLines) or \
 				searchIndex == blockEnd:
-				self.displaySuggestions(content, self.keys)
+				self.displaySuggestions(content, self.keys, cinds, pinfo)
 				self.lastDispTime = currTime
 				self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
 				self.absSelected = len(self.suggestionLines) * self.page + self.selected

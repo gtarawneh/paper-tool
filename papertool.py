@@ -29,11 +29,14 @@ def getSuggestions(content, subList, keys, maxCount):
 
 def main():
 	content =  getContent()
+	pinfo = [('Spatiotemporal energy models for the perception of motion', \
+		'Adelson and Bergen', '1985')]
+	cinds = [0 for _ in content]
 	getSuggestionFunc = getSuggestions
-	con1 = Console()
-	con1.init()
 	try:
-		con1.loopConsole(content, getSuggestionFunc)
+		con1 = Console()
+		con1.init()
+		con1.loopConsole(content, cinds, pinfo)
 	except Exception as err:
 		con1.deinit()
 		traceback.print_exc(file=sys.stdout)
