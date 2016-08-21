@@ -51,7 +51,7 @@ class Console:
 		end = min(lastPageEntryIndex, len(self.suggestions))
 		return self.suggestions[start:end]
 
-	def displaySuggestions(self, content, keys, cinds, pinfo):
+	def displaySuggestions(self, content, keys, indexList, infoList):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
@@ -64,8 +64,8 @@ class Console:
 			remChars = self.W - len(sug) - 1
 			if remChars > 0:
 				# display line info
-				linfo = pinfo[cinds[sugInd]]
-				infoStr = '(%s, %s)' % (linfo[1], linfo[2])
+				info = infoList[indexList[sugInd]]
+				infoStr = self.getInfoStr(info)
 				self.scr.addstr(i, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
 			if not isHighlight:
 				for keyword in keys:
@@ -76,11 +76,23 @@ class Console:
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
+	def getInfoStr(self, info):
+		hasTitle = (info['title'] != None) and (len(info['title']) > 0)
+		hasYear = info['year'] != None
+		if hasTitle:
+			if hasYear:
+				infoStr = '(%s, %s)' % (info['title'], info['year'])
+			else:
+				infoStr = '(%s)' % info['title']
+		else:
+			infoStr = '(n/a)'
+		return infoStr.encode("utf-8")
+
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
 		self.clearLine(self.queryLine)
-		rightSide = "(match %d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
+		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
 		self.scr.addstr(self.queryLine, 0, '> ' + self.query, queryStyle)
@@ -96,9 +108,9 @@ class Console:
 		self.scr.hline(self.H-2, 0, "-", self.W)
 
 	# content is an array of sentences
-	# cinds is a corresponding array of entries in pinfo
-	# pinfo is a list of tupes (title, authors, year)
-	def loopConsole(self, content, cinds, pinfo):
+	# indexList is a corresponding array of entries in infoList
+	# infoList is a list of tupes (title, authors, year)
+	def loopConsole(self, content, indexList, infoList):
 		self.resizeWindow()
 		self.lastDispTime = time.time() - 5
 		searchIndex = len(content)
@@ -121,7 +133,7 @@ class Console:
 			if (currTime - self.lastDispTime > 0.25) or \
 				len(self.suggestions) >= len(self.suggestionLines) or \
 				searchIndex == blockEnd:
-				self.displaySuggestions(content, self.keys, cinds, pinfo)
+				self.displaySuggestions(content, self.keys, indexList, infoList)
 				self.lastDispTime = currTime
 				self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
 				self.absSelected = len(self.suggestionLines) * self.page + self.selected

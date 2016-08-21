@@ -15,6 +15,7 @@ def parseMetaFile(metaFile):
 		'date' : '{http://www.tei-c.org/ns/1.0}date',
 	}
 	meta = {
+		'_file' : metaFile,
 		'authors' : [],
 		'title': None,
 		'year' : None,

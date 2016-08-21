@@ -3,15 +3,22 @@
 import sys
 import traceback
 import math
+import json
 
 from console import *
 
-filename = 'sentences.txt'
+senFile = 'sentences.txt'
+infoFile = 'paper-info.json'
+indexFile = 'index.json'
 
 def getContent():
-	with open(filename) as f:
+	with open(senFile) as f:
 		content = f.read().splitlines()
-		return content
+	with open(infoFile) as f:
+		infoList = json.load(f)
+	with open(indexFile) as f:
+		indexList = json.load(f)
+	return (content, indexList, infoList)
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
@@ -28,15 +35,15 @@ def getSuggestions(content, subList, keys, maxCount):
 	return results
 
 def main():
-	content =  getContent()
-	pinfo = [('Spatiotemporal energy models for the perception of motion', \
-		'Adelson and Bergen', '1985')]
-	cinds = [0 for _ in content]
+	content, indexList, infoList =  getContent()
+	# pinfo = [('Spatiotemporal energy models for the perception of motion', \
+	# 	'Adelson and Bergen', '1985')]
+	# cinds = [0 for _ in content]
 	getSuggestionFunc = getSuggestions
 	try:
 		con1 = Console()
 		con1.init()
-		con1.loopConsole(content, cinds, pinfo)
+		con1.loopConsole(content, indexList, infoList)
 	except Exception as err:
 		con1.deinit()
 		traceback.print_exc(file=sys.stdout)

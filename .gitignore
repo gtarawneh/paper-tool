@@ -22,6 +22,8 @@ $RECYCLE.BIN/
 *.lnk
 
 sentences.txt
+index.json
+paper-info.json
 *.pyc
 *.xml
 meta/
