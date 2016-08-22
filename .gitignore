@@ -28,3 +28,6 @@ paper-info.json
 *.xml
 meta/
 text/
+old/
+temp/
+paper-crossref.json

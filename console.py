@@ -77,16 +77,20 @@ class Console:
 			self.clearLine(i)
 
 	def getInfoStr(self, info):
-		hasTitle = (info['title'] != None) and (len(info['title']) > 0)
-		hasYear = info['year'] != None
-		if hasTitle:
-			if hasYear:
-				infoStr = '(%s, %s)' % (info['title'], info['year'])
+		if info and 'message' in info:
+			item0 = info['message']['items'][0]
+			title = ''.join(item0['title'])
+			if 'published-print' in item0:
+				year = item0['published-print']['date-parts'][0][0]
+			elif 'deposited' in item0:
+				year = item0['deposited']['date-parts'][0][0]
+			elif 'issued' in item0:
+				year = item0['issued']['date-parts'][0][0]
 			else:
-				infoStr = '(%s)' % info['title']
+				raise Exception(title)
+			return '(%s, %d)' % (title, year)
 		else:
-			infoStr = '(n/a)'
-		return infoStr.encode("utf-8")
+			return ''
 
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD

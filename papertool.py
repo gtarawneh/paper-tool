@@ -8,7 +8,7 @@ import json
 from console import *
 
 senFile = 'sentences.txt'
-infoFile = 'paper-info.json'
+infoFile = 'paper-crossref.json'
 indexFile = 'index.json'
 
 def getContent():
@@ -36,9 +36,6 @@ def getSuggestions(content, subList, keys, maxCount):
 
 def main():
 	content, indexList, infoList =  getContent()
-	# pinfo = [('Spatiotemporal energy models for the perception of motion', \
-	# 	'Adelson and Bergen', '1985')]
-	# cinds = [0 for _ in content]
 	getSuggestionFunc = getSuggestions
 	try:
 		con1 = Console()

@@ -32,6 +32,7 @@ for ind, textFile in enumerate(fileList):
 		indexList += [ind] * len(fileContent)
 		metaFile = textFile.replace('/text/', '/meta/')
 		meta = parser.parseMetaFile(metaFile)
+		meta['_file'] = metaFile
 		infoList.append(meta)
 		yearFail += 1 if meta['year'] == None else 0
 		titleFail += 1 if meta['title'] == None else 0
