@@ -2,6 +2,7 @@
 import curses
 import math
 import time
+from subprocess import call
 
 class Console:
 
@@ -91,6 +92,12 @@ class Console:
 			return '(%s, %d)' % (title, year)
 		else:
 			return ''
+
+	def displayWebPage(self, info):
+		if 'message' in info:
+			item0 = info['message']['items'][0]
+			url = item0['URL']
+			call(["chrome", url])
 
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
@@ -190,6 +197,11 @@ class Console:
 					# on top of current page (and previous page exists)
 					self.absSelected -= len(self.suggestionLines)
 					self.resizeWindow()
+			elif c == 23:
+				# ctrl-w
+				selSug = self.suggestions[self.absSelected]
+				papInd = indexList[selSug]
+				self.displayWebPage(infoList[papInd])
 			elif c == curses.KEY_DC:
 				self.query = ''
 				self.keys = []
