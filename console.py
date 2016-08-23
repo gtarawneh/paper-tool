@@ -99,6 +99,12 @@ class Console:
 			url = item0['URL']
 			call(["chrome", url])
 
+	def displayPDF(self, info):
+		f = info['_file']
+		f = f.replace('/cygdrive/d/dev/papertool/text/', 'X:\\readlab\\Library\\')
+		f = f.replace('.txt', '.pdf')
+		call(['evince', '-f', f])
+
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
@@ -202,6 +208,11 @@ class Console:
 				selSug = self.suggestions[self.absSelected]
 				papInd = indexList[selSug]
 				self.displayWebPage(infoList[papInd])
+			elif c == 20:
+				# ctrl-t
+				selSug = self.suggestions[self.absSelected]
+				papInd = indexList[selSug]
+				self.displayPDF(infoList[papInd])
 			elif c == curses.KEY_DC:
 				self.query = ''
 				self.keys = []
