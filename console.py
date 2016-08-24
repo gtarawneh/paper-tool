@@ -242,8 +242,8 @@ class Console:
 					# on top of current page (and previous page exists)
 					self.absSelected -= len(self.suggestionLines)
 					self.resizeWindow()
-			elif c == 23:
-				# ctrl-w
+			elif c == 16:
+				# ctrl-p
 				selSug = self.suggestions[self.absSelected]
 				papInd = indexList[selSug]
 				self.displayWebPage(infoList[papInd])
