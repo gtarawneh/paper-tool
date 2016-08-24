@@ -2,7 +2,8 @@
 import curses
 import math
 import time
-from subprocess import call
+import subprocess
+import os
 
 class Console:
 
@@ -97,13 +98,17 @@ class Console:
 		if 'message' in info:
 			item0 = info['message']['items'][0]
 			url = item0['URL']
-			call(["chrome", url])
+			self.runProcess(["chrome", url])
 
 	def displayPDF(self, info):
 		f = info['_file']
 		f = f.replace('/cygdrive/d/dev/papertool/text/', 'X:\\readlab\\Library\\')
 		f = f.replace('.txt', '.pdf')
-		call(['evince', '-f', f])
+		self.runProcess(['evince', '-f', f])
+
+	def runProcess(self, p):
+		FNULL = open(os.devnull, 'w')
+		subprocess.call(p, stderr = FNULL)
 
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
