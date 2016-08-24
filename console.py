@@ -79,41 +79,36 @@ class Console:
 			self.clearLine(i)
 
 	def displaySuggestionsModeB(self, content, keys, indexList, infoList):
-		centerPos = 20
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
-			sug = content[sugInd][0:self.W]
+			sug = content[sugInd]
 			isHighlight = i == self.selected
 			self.clearLine(i)
 			lineStyle = curses.color_pair(3 if isHighlight else 0)
+
 			if keys:
 				k = sug.lower().find(keys[0].lower())
+				centerPos = (self.W - len(keys[0])) / 2
 				delta = centerPos - k
 			else:
 				delta = 0
 
 			if delta>=0:
-				# l = min(len(sug) - delta, self.W)
-				# remChars = self.W - delta;
-				self.scr.addstr(i, delta, sug, lineStyle)
+				l = min(len(sug), self.W - delta)
+				self.scr.addstr(i, delta, sug[:l], lineStyle)
 			else:
-				# l = min(len(sug), self.W)
-				# self.scr.addstr(i, 0, sug[-delta:], lineStyle)
-				pass
-			# remChars = self.W - len(sug) - 1
-			# if remChars > 0:
-			# 	# display line info
-			# 	info = infoList[indexList[sugInd]]
-			# 	infoStr = self.getInfoStr(info)
-			# 	self.scr.addstr(i, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
-			# if not isHighlight:
-			# 	for keyword in keys:
-			# 		k = sug.lower().find(keyword.lower())
-			# 		if k > -1:
-			# 			keywordCase = content[sugInd][k:k+len(keyword)]
-			# 			self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
+				l = min(len(sug) + delta, self.W)
+				self.scr.addstr(i, 0, sug[-delta:-delta+l], lineStyle)
+
+			if not isHighlight:
+				for keyword in keys:
+					k = sug.lower().find(keyword.lower())
+					if k > -1:
+						keywordCase = content[sugInd][k:k+len(keyword)]
+						# self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
+
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
