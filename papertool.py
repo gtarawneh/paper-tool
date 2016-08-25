@@ -12,13 +12,17 @@ infoFile = 'paper-crossref.json'
 indexFile = 'index.json'
 
 def getContent():
-	with open(senFile) as f:
+	with open(getAbsolutePath(senFile)) as f:
 		content = f.read().splitlines()
-	with open(infoFile) as f:
+	with open(getAbsolutePath(infoFile)) as f:
 		infoList = json.load(f)
-	with open(indexFile) as f:
+	with open(getAbsolutePath(indexFile)) as f:
 		indexList = json.load(f)
 	return (content, indexList, infoList)
+
+def getAbsolutePath(file):
+	scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]))
+	return os.path.join(scriptPath, file)
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
