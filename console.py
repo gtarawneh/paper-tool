@@ -242,13 +242,13 @@ class Console:
 					# on top of current page (and previous page exists)
 					self.absSelected -= len(self.suggestionLines)
 					self.resizeWindow()
-			elif c == 16:
-				# ctrl-p
+			elif c == 23:
+				# ctrl-w
 				selSug = self.suggestions[self.absSelected]
 				papInd = indexList[selSug]
 				self.displayWebPage(infoList[papInd])
-			elif c == 20:
-				# ctrl-t
+			elif c == 16:
+				# ctrl-p
 				selSug = self.suggestions[self.absSelected]
 				papInd = indexList[selSug]
 				self.displayPDF(infoList[papInd])
