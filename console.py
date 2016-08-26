@@ -163,6 +163,25 @@ class Console:
 		self.selected = self.absSelected % len(self.suggestionLines)
 		self.scr.hline(self.H-2, 0, "-", self.W)
 
+	def getKeys(self, query):
+		# splits an input query into `keys` (terms)
+		#
+		# query is first split into `parts` separated by double-
+		# quotations. Even parts as split further by spaces
+		# while odd ones are added to keys as whole
+		#
+		# for example, for a query of: foo "bar foo" bar
+		# foo is key #1
+		# bar foo is key #2
+		# bar is key #3
+		keys = []
+		parts = [p.lower() for p in query.split('"')]
+		for i in xrange(0, len(parts), 2):
+			keys += parts[i].split(' ')
+		for i in xrange(1, len(parts), 2):
+			keys.append(parts[i])
+		return keys
+
 	# content is an array of sentences
 	# indexList is a corresponding array of entries in infoList
 	# infoList is a list of tupes (title, authors, year)
@@ -262,7 +281,7 @@ class Console:
 				searchIndex = 0
 			else:
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
-				self.keys = [k.lower() for k in self.query.split(' ')]
+				self.keys = self.getKeys(self.query)
 				self.suggestions = []
 				self.scr.timeout(0) # non-blocking
 				self.absSelected = 0
