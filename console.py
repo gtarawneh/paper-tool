@@ -71,7 +71,7 @@ class Console:
 				self.scr.addstr(i, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
 			if not isHighlight:
 				for keyword in keys:
-					k = sug.lower().find(keyword.lower())
+					k = sug.lower().find(keyword)
 					if k > -1:
 						keywordCase = content[sugInd][k:k+len(keyword)]
 						self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
@@ -89,7 +89,7 @@ class Console:
 			lineStyle = curses.color_pair(3 if isHighlight else 0)
 
 			if keys:
-				k = sug.lower().find(keys[0].lower())
+				k = sug.lower().find(keys[0])
 				centerPos = (self.W - len(keys[0])) / 2
 				delta = centerPos - k
 			else:
@@ -104,7 +104,7 @@ class Console:
 
 			if not isHighlight:
 				for keyword in keys:
-					k = sug.lower().find(keyword.lower())
+					k = sug.lower().find(keyword)
 					if k > -1:
 						keywordCase = content[sugInd][k:k+len(keyword)]
 						# self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
