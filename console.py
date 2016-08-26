@@ -125,6 +125,8 @@ class Console:
 			else:
 				raise Exception(title)
 			return '(%s, %d)' % (title, year)
+		elif info:
+			return '(%s)' % info['_file'].split('/')[-1].encode('utf-8')
 		else:
 			return ''
 
