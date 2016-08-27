@@ -144,7 +144,7 @@ class Console:
 
 	def runProcess(self, p):
 		FNULL = open(os.devnull, 'w')
-		subprocess.call(p, stderr = FNULL)
+		subprocess.Popen(p, stderr = FNULL)
 
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
