@@ -281,7 +281,9 @@ class Console:
 				self.selected = 0
 				self.suggestions = []
 				searchIndex = 0
-			else:
+			elif c in [curses.KEY_LEFT, curses.KEY_RIGHT]:
+				pass
+			elif c in range(256):
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
 				self.keys = self.getKeys(self.query)
 				self.suggestions = []
@@ -290,3 +292,5 @@ class Console:
 				self.page = 0
 				self.selected = 0
 				searchIndex = 0
+			else:
+				raise Exception('unsupported key: %d' % c)
