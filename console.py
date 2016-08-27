@@ -138,8 +138,6 @@ class Console:
 
 	def displayPDF(self, info):
 		f = info['_file']
-		f = f.replace('/cygdrive/d/dev/papertool/text/', 'X:\\readlab\\Library\\')
-		f = f.replace('.txt', '.pdf')
 		self.runProcess(['evince', '-f', f])
 
 	def runProcess(self, p):
