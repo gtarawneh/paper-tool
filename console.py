@@ -53,28 +53,31 @@ class Console:
 		end = min(lastPageEntryIndex, len(self.suggestions))
 		return self.suggestions[start:end]
 
+	def displaySuggestion(self, sugInd, line, isHighlight, content, keys, indexList, infoList):
+		sug = content[sugInd][0:self.W]
+		self.clearLine(line)
+		lineStyle = curses.color_pair(3 if isHighlight else 0)
+		self.scr.addstr(line, 0, sug, lineStyle)
+		remChars = self.W - len(sug) - 1
+		if remChars > 0:
+			# display line info
+			info = infoList[indexList[sugInd]]
+			infoStr = self.getInfoStr(info)
+			self.scr.addstr(line, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
+		if not isHighlight:
+			for keyword in keys:
+				k = sug.lower().find(keyword)
+				if k > -1:
+					keywordCase = content[sugInd][k:k+len(keyword)]
+					self.scr.addstr(line, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
+
 	def displaySuggestions(self, content, keys, indexList, infoList):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
-			sug = content[sugInd][0:self.W]
 			isHighlight = i == self.selected
-			self.clearLine(i)
-			lineStyle = curses.color_pair(3 if isHighlight else 0)
-			self.scr.addstr(i, 0, sug, lineStyle)
-			remChars = self.W - len(sug) - 1
-			if remChars > 0:
-				# display line info
-				info = infoList[indexList[sugInd]]
-				infoStr = self.getInfoStr(info)
-				self.scr.addstr(i, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
-			if not isHighlight:
-				for keyword in keys:
-					k = sug.lower().find(keyword)
-					if k > -1:
-						keywordCase = content[sugInd][k:k+len(keyword)]
-						self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
+			self.displaySuggestion(sugInd, i, isHighlight, content, keys, indexList, infoList)
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
