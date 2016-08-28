@@ -141,13 +141,11 @@ class Console:
 
 	def displayPDF(self, info):
 		f = info['_file']
-		f = f.replace('/cygdrive/d/dev/papertool/text/', 'X:\\readlab\\Library\\')
-		f = f.replace('.txt', '.pdf')
 		self.runProcess(['evince', '-f', f])
 
 	def runProcess(self, p):
 		FNULL = open(os.devnull, 'w')
-		subprocess.call(p, stderr = FNULL)
+		subprocess.Popen(p, stderr = FNULL)
 
 	def writeQueryLine(self):
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
@@ -284,7 +282,9 @@ class Console:
 				self.selected = 0
 				self.suggestions = []
 				searchIndex = 0
-			else:
+			elif c in [curses.KEY_LEFT, curses.KEY_RIGHT]:
+				pass
+			elif c in range(256):
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
 				self.keys = self.getKeys(self.query)
 				self.suggestions = []
@@ -293,3 +293,5 @@ class Console:
 				self.page = 0
 				self.selected = 0
 				searchIndex = 0
+			else:
+				raise Exception('unsupported key: %d' % c)
