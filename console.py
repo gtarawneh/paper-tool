@@ -8,7 +8,6 @@ import os
 class Console:
 
 	query = ''
-	cache = {}
 	suggestions = []
 	keys = []
 	searchedLines = 0
@@ -20,8 +19,15 @@ class Console:
 	W = 0
 	H = 0
 	scr = None
+	content = []
+	indexList = []
+	infoList = []
 
-	def init(self):
+	def __init__(self, content, indexList, infoList):
+		self.content = content
+		self.indexList = indexList
+		self.infoList = infoList
+		# init curses screen
 		self.scr = curses.initscr()
 		curses.start_color()
 		curses.noecho()
@@ -53,40 +59,44 @@ class Console:
 		end = min(lastPageEntryIndex, len(self.suggestions))
 		return self.suggestions[start:end]
 
-	def displaySuggestion(self, sugInd, line, isHighlight, content, keys, indexList, infoList):
-		sug = content[sugInd][0:self.W]
-		self.clearLine(line)
+	def displaySuggestion(self, sugInd, line, isHighlight, keys):
+		# display suggestion of index `sugInd` on line `line`
+		# highlighting occurrences of `keys` and, if `isHighlight`
+		# all of the line
+		sug = self.content[sugInd][0:self.W]
 		lineStyle = curses.color_pair(3 if isHighlight else 0)
+		self.clearLine(line)
 		self.scr.addstr(line, 0, sug, lineStyle)
 		remChars = self.W - len(sug) - 1
 		if remChars > 0:
 			# display line info
-			info = infoList[indexList[sugInd]]
+			info = self.infoList[self.indexList[sugInd]]
 			infoStr = self.getInfoStr(info)
 			self.scr.addstr(line, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
 		if not isHighlight:
 			for keyword in keys:
 				k = sug.lower().find(keyword)
 				if k > -1:
-					keywordCase = content[sugInd][k:k+len(keyword)]
+					keywordCase = self.content[sugInd][k:k+len(keyword)]
 					self.scr.addstr(line, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
 
-	def displaySuggestions(self, content, keys, indexList, infoList):
+	def displaySuggestions(self, keys):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
 			isHighlight = i == self.selected
-			self.displaySuggestion(sugInd, i, isHighlight, content, keys, indexList, infoList)
+			self.displaySuggestion(sugInd, i, isHighlight, keys)
+		# clear unused lines
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
-	def displaySuggestionsModeB(self, content, keys, indexList, infoList):
+	def displaySuggestionsModeB(self, keys):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
-			sug = content[sugInd]
+			sug = self.content[sugInd]
 			isHighlight = i == self.selected
 			self.clearLine(i)
 			lineStyle = curses.color_pair(3 if isHighlight else 0)
@@ -109,9 +119,10 @@ class Console:
 				for keyword in keys:
 					k = sug.lower().find(keyword)
 					if k > -1:
-						keywordCase = content[sugInd][k:k+len(keyword)]
+						keywordCase = self.content[sugInd][k:k+len(keyword)]
 						# self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
 
+		# clear remaining lines
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
@@ -134,6 +145,7 @@ class Console:
 			return ''
 
 	def displayWebPage(self, info):
+		# open up doi link in browser
 		if 'message' in info:
 			item0 = info['message']['items'][0]
 			url = item0['URL']
@@ -188,18 +200,18 @@ class Console:
 	# content is an array of sentences
 	# indexList is a corresponding array of entries in infoList
 	# infoList is a list of tupes (title, authors, year)
-	def loopConsole(self, content, indexList, infoList):
+	def loopConsole(self):
 		self.resizeWindow()
 		self.lastDispTime = time.time() - 5
-		searchIndex = len(content)
-		lcontent = [s.lower() for s in content]
+		searchIndex = len(self.content)
+		lcontent = [s.lower() for s in self.content]
 		keys = []
 		self.absSelected = 0
-		self.suggestions = range(0, len(content))
+		self.suggestions = range(0, len(lcontent))
 		# main loop
 		while True:
 			# search (if necessary)
-			blockEnd = min(searchIndex + 10000, len(content))
+			blockEnd = min(searchIndex + 10000, len(lcontent))
 			for i in range(searchIndex, blockEnd):
 				line = lcontent[i]
 				matches = [line.find(k) for k in self.keys]
@@ -211,7 +223,7 @@ class Console:
 			if (currTime - self.lastDispTime > 0.25) or \
 				len(self.suggestions) >= len(self.suggestionLines) or \
 				searchIndex == blockEnd:
-				self.displaySuggestions(content, self.keys, indexList, infoList)
+				self.displaySuggestions(self.keys)
 				self.lastDispTime = currTime
 				self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
 				self.absSelected = len(self.suggestionLines) * self.page + self.selected
@@ -220,7 +232,7 @@ class Console:
 			self.scr.leaveok(False)
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
-			self.scr.timeout(-1 if searchIndex == len(content) else 0)
+			self.scr.timeout(-1 if searchIndex == len(lcontent) else 0)
 			# grab input
 			c = self.scr.getch()
 			# process input
@@ -267,8 +279,8 @@ class Console:
 			elif c == 23:
 				# ctrl-w
 				selSug = self.suggestions[self.absSelected]
-				papInd = indexList[selSug]
-				self.displayWebPage(infoList[papInd])
+				papInd = self.indexList[selSug]
+				self.displayWebPage(self.infoList[papInd])
 			elif c == 16:
 				# ctrl-p
 				selSug = self.suggestions[self.absSelected]

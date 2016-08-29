@@ -42,9 +42,8 @@ def main():
 	content, indexList, infoList =  getContent()
 	getSuggestionFunc = getSuggestions
 	try:
-		con1 = Console()
-		con1.init()
-		con1.loopConsole(content, indexList, infoList)
+		con1 = Console(content, indexList, infoList)
+		con1.loopConsole()
 	except Exception as err:
 		con1.deinit()
 		traceback.print_exc(file=sys.stdout)
