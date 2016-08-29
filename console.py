@@ -1,15 +1,13 @@
-
 import curses
 import math
 import time
 import subprocess
 import os
+from searcher import *
 
 class Console:
 
 	query = ''
-	suggestions = []
-	keys = []
 	searchedLines = 0
 	selected = 0
 	page = 0
@@ -22,11 +20,13 @@ class Console:
 	content = []
 	indexList = []
 	infoList = []
+	searcher = None
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
 		self.indexList = indexList
 		self.infoList = infoList
+		self.searcher = Searcher(content, indexList, infoList)
 		# init curses screen
 		self.scr = curses.initscr()
 		curses.start_color()
@@ -56,8 +56,8 @@ class Console:
 	def getOnScreenSuggestions(self):
 		start = len(self.suggestionLines) * self.page
 		lastPageEntryIndex = start + len(self.suggestionLines)
-		end = min(lastPageEntryIndex, len(self.suggestions))
-		return self.suggestions[start:end]
+		end = min(lastPageEntryIndex, len(self.searcher.suggestions))
+		return self.searcher.suggestions[start:end]
 
 	def displaySuggestion(self, sugInd, line, isHighlight, keys):
 		# display suggestion of index `sugInd` on line `line`
@@ -80,13 +80,13 @@ class Console:
 					keywordCase = self.content[sugInd][k:k+len(keyword)]
 					self.scr.addstr(line, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
 
-	def displaySuggestions(self, keys):
+	def displaySuggestions(self):
 		currSuggestions = self.getOnScreenSuggestions()
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
 			isHighlight = i == self.selected
-			self.displaySuggestion(sugInd, i, isHighlight, keys)
+			self.displaySuggestion(sugInd, i, isHighlight, self.searcher.keys)
 		# clear unused lines
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
@@ -163,7 +163,7 @@ class Console:
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
 		self.clearLine(self.queryLine)
-		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.suggestions), self.page + 1, self.pages)
+		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.searcher.suggestions), self.page + 1, self.pages)
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
 		self.scr.addstr(self.queryLine, 0, '> ' + self.query, queryStyle)
@@ -203,36 +203,26 @@ class Console:
 	def loopConsole(self):
 		self.resizeWindow()
 		self.lastDispTime = time.time() - 5
-		searchIndex = len(self.content)
-		lcontent = [s.lower() for s in self.content]
-		keys = []
 		self.absSelected = 0
-		self.suggestions = range(0, len(lcontent))
+		self.searcher.startSearch()
 		# main loop
 		while True:
 			# search (if necessary)
-			blockEnd = min(searchIndex + 10000, len(lcontent))
-			for i in range(searchIndex, blockEnd):
-				line = lcontent[i]
-				matches = [line.find(k) for k in self.keys]
-				if not -1 in matches:
-					self.suggestions.append(i)
-			searchIndex = blockEnd
-			# update display content:
+			self.searcher.continueSearch()
 			currTime = time.time()
 			if (currTime - self.lastDispTime > 0.25) or \
-				len(self.suggestions) >= len(self.suggestionLines) or \
-				searchIndex == blockEnd:
-				self.displaySuggestions(self.keys)
+				len(self.searcher.suggestions) >= len(self.suggestionLines) or \
+				self.searcher.isSearchComplete:
+				self.displaySuggestions()
 				self.lastDispTime = currTime
-				self.pages = math.ceil(float(len(self.suggestions)) / len(self.suggestionLines))
+				self.pages = math.ceil(float(len(self.searcher.suggestions)) / len(self.suggestionLines))
 				self.absSelected = len(self.suggestionLines) * self.page + self.selected
 			self.scr.leaveok(True)
 			self.writeQueryLine()
 			self.scr.leaveok(False)
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
-			self.scr.timeout(-1 if searchIndex == len(lcontent) else 0)
+			self.scr.timeout(-1 if self.searcher.searchIndex == len(self.content) else 0)
 			# grab input
 			c = self.scr.getch()
 			# process input
@@ -243,7 +233,7 @@ class Console:
 			elif c == curses.KEY_RESIZE:
 				self.resizeWindow()
 			elif c == curses.KEY_DOWN:
-				if self.absSelected < len(self.suggestions)-1:
+				if self.absSelected < len(self.searcher.suggestions)-1:
 					self.absSelected += 1
 					self.resizeWindow()
 			elif c == curses.KEY_UP:
@@ -254,15 +244,15 @@ class Console:
 				if self.selected < len(self.suggestionLines)-1:
 					# not at end of current page
 					prevLines = len(self.suggestionLines) * self.page
-					remainingLines = len(self.suggestions) - prevLines
+					remainingLines = len(self.searcher.suggestions) - prevLines
 					self.selected = min(len(self.suggestionLines)-1, remainingLines-1)
 				elif self.page < self.pages-1:
 					# end of current page (and further page exists)
 					self.absSelected += len(self.suggestionLines)
-					self.absSelected = min(self.absSelected, len(self.suggestions)-1)
+					self.absSelected = min(self.absSelected, len(self.searcher.suggestions)-1)
 					self.resizeWindow()
 			elif c == curses.KEY_END:
-				self.absSelected = len(self.suggestions) - 1
+				self.absSelected = len(self.searcher.suggestions) - 1
 				self.resizeWindow()
 			elif c == curses.KEY_HOME:
 				self.absSelected = 0
@@ -278,32 +268,28 @@ class Console:
 					self.resizeWindow()
 			elif c == 23:
 				# ctrl-w
-				selSug = self.suggestions[self.absSelected]
+				selSug = self.searcher.suggestions[self.absSelected]
 				papInd = self.indexList[selSug]
 				self.displayWebPage(self.infoList[papInd])
 			elif c == 16:
 				# ctrl-p
-				selSug = self.suggestions[self.absSelected]
+				selSug = self.searcher.suggestions[self.absSelected]
 				papInd = indexList[selSug]
 				self.displayPDF(infoList[papInd])
 			elif c == curses.KEY_DC:
 				self.query = ''
-				self.keys = []
 				self.absSelected = 0
 				self.page = 0
 				self.selected = 0
-				self.suggestions = []
-				searchIndex = 0
+				self.searcher.startSearch()
 			elif c in [curses.KEY_LEFT, curses.KEY_RIGHT]:
 				pass
 			elif c in range(256):
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
-				self.keys = self.getKeys(self.query)
-				self.suggestions = []
+				self.searcher.startSearch(self.getKeys(self.query))
 				self.scr.timeout(0) # non-blocking
 				self.absSelected = 0
 				self.page = 0
 				self.selected = 0
-				searchIndex = 0
 			else:
 				raise Exception('unsupported key: %d' % c)
