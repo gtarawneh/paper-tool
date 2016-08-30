@@ -274,8 +274,8 @@ class Console:
 			elif c == 16:
 				# ctrl-p
 				selSug = self.searcher.suggestions[self.absSelected]
-				papInd = indexList[selSug]
-				self.displayPDF(infoList[papInd])
+				papInd = self.indexList[selSug]
+				self.displayPDF(self.infoList[papInd])
 			elif c == curses.KEY_DC:
 				self.query = ''
 				self.absSelected = 0
