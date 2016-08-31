@@ -143,14 +143,15 @@ class Console:
 		while True:
 			# search (if necessary)
 			self.searcher.continueSearch()
+			sugCount = self.searcher.getSuggestionCount()
+			sugLineCount = len(self.suggestionLines)
 			currTime = time.time()
-			if (currTime - self.lastDispTime > 0.25) or \
-				len(self.searcher.suggestions) >= len(self.suggestionLines) or \
-				self.searcher.isSearchComplete:
+			elapsed = currTime - self.lastDispTime
+			if (elapsed > 0.25) or (sugCount >= sugLineCount) or self.searcher.isSearchComplete():
 				self.displaySuggestions()
 				self.lastDispTime = currTime
-				self.pages = math.ceil(float(len(self.searcher.suggestions)) / len(self.suggestionLines))
-				self.absSelected = len(self.suggestionLines) * self.page + self.selected
+				self.pages = math.ceil(float(sugCount) / sugLineCount)
+				self.absSelected = sugLineCount * self.page + self.selected
 			self.scr.leaveok(True)
 			self.writeQueryLine()
 			self.scr.leaveok(False)
@@ -167,7 +168,7 @@ class Console:
 			elif c == curses.KEY_RESIZE:
 				self.resizeWindow()
 			elif c == curses.KEY_DOWN:
-				if self.absSelected < len(self.searcher.suggestions)-1:
+				if self.absSelected < sugCount-1:
 					self.absSelected += 1
 					self.resizeWindow()
 			elif c == curses.KEY_UP:
@@ -175,14 +176,14 @@ class Console:
 					self.absSelected -= 1
 					self.resizeWindow()
 			elif c == curses.KEY_NPAGE:
-				if self.selected < len(self.suggestionLines)-1:
+				if self.selected < sugLineCount-1:
 					# not at end of current page
-					prevLines = len(self.suggestionLines) * self.page
+					prevLines = sugLineCount * self.page
 					remainingLines = len(self.searcher.suggestions) - prevLines
-					self.selected = min(len(self.suggestionLines)-1, remainingLines-1)
+					self.selected = min(sugLineCount-1, remainingLines-1)
 				elif self.page < self.pages-1:
 					# end of current page (and further page exists)
-					self.absSelected += len(self.suggestionLines)
+					self.absSelected += sugLineCount
 					self.absSelected = min(self.absSelected, len(self.searcher.suggestions)-1)
 					self.resizeWindow()
 			elif c == curses.KEY_END:
@@ -198,7 +199,7 @@ class Console:
 					self.resizeWindow()
 				elif self.page > 0:
 					# on top of current page (and previous page exists)
-					self.absSelected -= len(self.suggestionLines)
+					self.absSelected -= sugLineCount
 					self.resizeWindow()
 			elif c == 23:
 				# ctrl-w

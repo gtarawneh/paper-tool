@@ -30,7 +30,7 @@ class Searcher:
 
 	def continueSearch(self):
 		# search (if necessary)
-		blockEnd = min(self.searchIndex + 10000, len(self.lcontent))
+		blockEnd = min(self.searchIndex + 20000, len(self.lcontent))
 		for i in range(self.searchIndex, blockEnd):
 			line = self.lcontent[i]
 			matches = [line.find(k) for k in self.keys]
@@ -39,7 +39,7 @@ class Searcher:
 		self.searchIndex = blockEnd
 
 	def isSearchComplete(self):
-		return self.searcher.searchIndex == self.blockEnd
+		return self.searchIndex == len(self.lcontent)
 
 	def getSuggestion(self, ind):
 		sug = self.content[ind]
@@ -84,3 +84,6 @@ class Searcher:
 	def getFile(self, ind):
 		info = self._getSentenceInfo(ind)
 		return info['_file']
+
+	def getSuggestionCount(self):
+		return len(self.suggestions)
