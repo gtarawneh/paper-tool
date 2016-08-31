@@ -11,6 +11,8 @@ class Searcher:
 	keys = []
 	suggestions = []
 	searchIndex = 0
+	searchInds = []
+	cache = {}
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
@@ -20,26 +22,33 @@ class Searcher:
 		self.startSearch([])
 
 	def startSearch(self, keys = []):
-		self.keys = keys
-		self.searchIndex = 0
 		if keys:
+			query = " ".join(self.keys)[:-1]
+			self.keys = keys
 			self.suggestions = []
-			searchIndex = len(self.content)
+			self.searchInds = self.cache.get(query, range(len(self.content)))
+			self.searchIndex = 0
 		else:
 			self.suggestions = range(0, len(self.content))
+			searchIndex = len(self.content)
 
 	def continueSearch(self):
 		# search (if necessary)
-		blockEnd = min(self.searchIndex + 20000, len(self.lcontent))
-		for i in range(self.searchIndex, blockEnd):
+		blockEnd = min(self.searchIndex + 10000, len(self.searchInds))
+		for j in range(self.searchIndex, blockEnd):
+			i = self.searchInds[j]
 			line = self.lcontent[i]
 			matches = [line.find(k) for k in self.keys]
 			if not -1 in matches:
 				self.suggestions.append(i)
 		self.searchIndex = blockEnd
+		if self.isSearchComplete():
+			query = " ".join(self.keys)
+			if len(query) > 0:
+				self.cache[query] = self.suggestions
 
 	def isSearchComplete(self):
-		return self.searchIndex == len(self.lcontent)
+		return self.searchIndex == len(self.searchInds)
 
 	def getSuggestion(self, ind):
 		sug = self.content[ind]
@@ -64,9 +73,6 @@ class Searcher:
 			return '(%s)' % info['_file'].split('/')[-1].encode('utf-8')
 		else:
 			return ''
-
-	def isFinished(self):
-		return self.searchIndex == len(self.content)
 
 	def _getSentenceInfo(self, ind):
 		selSug = self.suggestions[ind]

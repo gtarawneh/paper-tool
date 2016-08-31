@@ -157,7 +157,7 @@ class Console:
 			self.scr.leaveok(False)
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
-			self.scr.timeout(-1 if self.searcher.isFinished() else 0)
+			self.scr.timeout(-1 if self.searcher.isSearchComplete() else 0)
 			# grab input
 			c = self.scr.getch()
 			# process input
