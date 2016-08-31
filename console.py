@@ -90,41 +90,6 @@ class Console:
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
-	def displaySuggestionsModeB(self, keys):
-		currSuggestions = self.getOnScreenSuggestions()
-		for i, sugInd in enumerate(currSuggestions):
-			if i not in self.suggestionLines:
-				break
-			sug = self.content[sugInd]
-			isHighlight = i == self.selected
-			self.clearLine(i)
-			lineStyle = curses.color_pair(3 if isHighlight else 0)
-
-			if keys:
-				k = sug.lower().find(keys[0])
-				centerPos = (self.W - len(keys[0])) / 2
-				delta = centerPos - k
-			else:
-				delta = 0
-
-			if delta>=0:
-				l = min(len(sug), self.W - delta)
-				self.scr.addstr(i, delta, sug[:l], lineStyle)
-			else:
-				l = min(len(sug) + delta, self.W)
-				self.scr.addstr(i, 0, sug[-delta:-delta+l], lineStyle)
-
-			if not isHighlight:
-				for keyword in keys:
-					k = sug.lower().find(keyword)
-					if k > -1:
-						keywordCase = self.content[sugInd][k:k+len(keyword)]
-						# self.scr.addstr(i, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
-
-		# clear remaining lines
-		for i in range(len(currSuggestions), len(self.suggestionLines)):
-			self.clearLine(i)
-
 	def displayWebPage(self, info):
 		# open up doi link in browser
 		if 'message' in info:
