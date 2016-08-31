@@ -63,21 +63,20 @@ class Console:
 		# display suggestion of index `sugInd` on line `line`
 		# highlighting occurrences of `keys` and, if `isHighlight`
 		# all of the line
-		sug = self.content[sugInd][0:self.W]
+		sugText, sugInfo = self.searcher.getSuggestion(sugInd)
+		sugText = sugText[0:self.W]
 		lineStyle = curses.color_pair(3 if isHighlight else 0)
 		self.clearLine(line)
-		self.scr.addstr(line, 0, sug, lineStyle)
-		remChars = self.W - len(sug) - 1
+		self.scr.addstr(line, 0, sugText, lineStyle)
+		remChars = self.W - len(sugText) - 1
 		if remChars > 0:
 			# display line info
-			info = self.infoList[self.indexList[sugInd]]
-			infoStr = self.getInfoStr(info)
-			self.scr.addstr(line, len(sug)+1, infoStr[:remChars], curses.color_pair(4))
+			self.scr.addstr(line, len(sugText)+1, sugInfo[:remChars], curses.color_pair(4))
 		if not isHighlight:
 			for keyword in keys:
-				k = sug.lower().find(keyword)
+				k = sugText.lower().find(keyword)
 				if k > -1:
-					keywordCase = self.content[sugInd][k:k+len(keyword)]
+					keywordCase = sugText[k:k+len(keyword)]
 					self.scr.addstr(line, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
 
 	def displaySuggestions(self):
@@ -125,24 +124,6 @@ class Console:
 		# clear remaining lines
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
-
-	def getInfoStr(self, info):
-		if info and 'message' in info:
-			item0 = info['message']['items'][0]
-			title = ''.join(item0['title'])
-			if 'published-print' in item0:
-				year = item0['published-print']['date-parts'][0][0]
-			elif 'deposited' in item0:
-				year = item0['deposited']['date-parts'][0][0]
-			elif 'issued' in item0:
-				year = item0['issued']['date-parts'][0][0]
-			else:
-				raise Exception(title)
-			return '(%s, %d)' % (title, year)
-		elif info:
-			return '(%s)' % info['_file'].split('/')[-1].encode('utf-8')
-		else:
-			return ''
 
 	def displayWebPage(self, info):
 		# open up doi link in browser
@@ -222,7 +203,7 @@ class Console:
 			self.scr.leaveok(False)
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
-			self.scr.timeout(-1 if self.searcher.searchIndex == len(self.content) else 0)
+			self.scr.timeout(-1 if self.searcher.isFinished() else 0)
 			# grab input
 			c = self.scr.getch()
 			# process input

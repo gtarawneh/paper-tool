@@ -36,3 +36,30 @@ class Searcher:
 
 	def isSearchComplete(self):
 		return self.searcher.searchIndex == self.blockEnd
+
+	def getSuggestion(self, ind):
+		sug = self.content[ind]
+		info = self.infoList[self.indexList[ind]]
+		infoStr = self._getInfoStr(info)
+		return (sug, infoStr)
+
+	def _getInfoStr(self, info):
+		if info and 'message' in info:
+			item0 = info['message']['items'][0]
+			title = ''.join(item0['title'])
+			if 'published-print' in item0:
+				year = item0['published-print']['date-parts'][0][0]
+			elif 'deposited' in item0:
+				year = item0['deposited']['date-parts'][0][0]
+			elif 'issued' in item0:
+				year = item0['issued']['date-parts'][0][0]
+			else:
+				raise Exception(title)
+			return '(%s, %d)' % (title, year)
+		elif info:
+			return '(%s)' % info['_file'].split('/')[-1].encode('utf-8')
+		else:
+			return ''
+
+	def isFinished(self):
+		return self.searchIndex == len(self.content)
