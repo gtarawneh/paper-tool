@@ -3,7 +3,7 @@ import math
 import time
 import subprocess
 import os
-from searcher import *
+from searcher import Searcher
 
 class Console:
 
@@ -17,16 +17,10 @@ class Console:
 	W = 0
 	H = 0
 	scr = None
-	content = []
-	indexList = []
-	infoList = []
 	searcher = None
 
-	def __init__(self, content, indexList, infoList):
-		self.content = content
-		self.indexList = indexList
-		self.infoList = infoList
-		self.searcher = Searcher(content, indexList, infoList)
+	def __init__(self, searcher):
+		self.searcher = searcher
 		# init curses screen
 		self.scr = curses.initscr()
 		curses.start_color()
@@ -90,16 +84,13 @@ class Console:
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
 
-	def displayWebPage(self, info):
+	def displayWebPage(self, url):
 		# open up doi link in browser
-		if 'message' in info:
-			item0 = info['message']['items'][0]
-			url = item0['URL']
-			self.runProcess(["chrome", url])
+		if url != None:
+			self.runProcess(['chrome', url])
 
-	def displayPDF(self, info):
-		f = info['_file']
-		self.runProcess(['evince', '-f', f])
+	def displayPDF(self, file):
+		self.runProcess(['evince', '-f', file])
 
 	def runProcess(self, p):
 		FNULL = open(os.devnull, 'w')
@@ -143,9 +134,6 @@ class Console:
 			keys.append(parts[i])
 		return keys
 
-	# content is an array of sentences
-	# indexList is a corresponding array of entries in infoList
-	# infoList is a list of tupes (title, authors, year)
 	def loopConsole(self):
 		self.resizeWindow()
 		self.lastDispTime = time.time() - 5
@@ -214,14 +202,12 @@ class Console:
 					self.resizeWindow()
 			elif c == 23:
 				# ctrl-w
-				selSug = self.searcher.suggestions[self.absSelected]
-				papInd = self.indexList[selSug]
-				self.displayWebPage(self.infoList[papInd])
+				url = self.searcher.getURL(self.absSelected)
+				self.displayWebPage(url)
 			elif c == 16:
 				# ctrl-p
-				selSug = self.searcher.suggestions[self.absSelected]
-				papInd = self.indexList[selSug]
-				self.displayPDF(self.infoList[papInd])
+				file = self.searcher.getFile(self.absSelected)
+				self.displayPDF(file)
 			elif c == curses.KEY_DC:
 				self.query = ''
 				self.absSelected = 0

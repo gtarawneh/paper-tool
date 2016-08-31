@@ -1,5 +1,9 @@
 class Searcher:
 
+	# content is an array of sentences
+	# indexList is a corresponding array of entries in infoList
+	# infoList is a list of tupes (title, authors, year)
+
 	content = []
 	lcontent = []
 	indexList = []
@@ -63,3 +67,20 @@ class Searcher:
 
 	def isFinished(self):
 		return self.searchIndex == len(self.content)
+
+	def _getSentenceInfo(self, ind):
+		selSug = self.suggestions[ind]
+		papInd = self.indexList[selSug]
+		return self.infoList[papInd]
+
+	def getURL(self, ind):
+		info = self._getSentenceInfo(ind)
+		if 'message' in info:
+			item0 = info['message']['items'][0]
+			return item0['URL']
+		else:
+			return None
+
+	def getFile(self, ind):
+		info = self._getSentenceInfo(ind)
+		return info['_file']

@@ -40,9 +40,10 @@ def getSuggestions(content, subList, keys, maxCount):
 
 def main():
 	content, indexList, infoList =  getContent()
+	searcher = Searcher(content, indexList, infoList)
 	getSuggestionFunc = getSuggestions
 	try:
-		con1 = Console(content, indexList, infoList)
+		con1 = Console(searcher)
 		con1.loopConsole()
 	except Exception as err:
 		con1.deinit()
