@@ -30,7 +30,7 @@ class Console:
 		curses.use_default_colors()
 		curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 		curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
-		curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_RED)
+		curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLACK)
 		curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
 
 	def deinit(self):
@@ -57,21 +57,30 @@ class Console:
 		# display suggestion of index `sugInd` on line `line`
 		# highlighting occurrences of `keys` and, if `isHighlight`
 		# all of the line
+		style1 = curses.color_pair(1) + curses.A_BOLD
+		style2 = curses.color_pair(3) + curses.A_BOLD
+		style3 = curses.color_pair(4)
+		backStyle = style2 if isHighlight else style1
+		infoStyle = style2 if isHighlight else style3
 		sugText, sugInfo = self.searcher.getSuggestion(sugInd)
-		sugText = sugText[0:self.W]
+		sugText = sugText[0:self.W] + ' '
 		lineStyle = curses.color_pair(3 if isHighlight else 0)
-		self.clearLine(line)
+		# self.clearLine(line)
 		self.scr.addstr(line, 0, sugText, lineStyle)
-		remChars = self.W - len(sugText) - 1
+		remChars = self.W - len(sugText)
 		if remChars > 0:
 			# display line info
-			self.scr.addstr(line, len(sugText)+1, sugInfo[:remChars], curses.color_pair(4))
-		if not isHighlight:
-			for keyword in keys:
-				k = sugText.lower().find(keyword)
-				if k > -1:
-					keywordCase = sugText[k:k+len(keyword)]
-					self.scr.addstr(line, k, keywordCase, curses.color_pair(1) + curses.A_BOLD)
+			infoCropped = sugInfo[:remChars]
+			self.scr.addstr(line, len(sugText), infoCropped, infoStyle)
+			remChars -= len(infoCropped)
+		if remChars > 0:
+			# clear remaining chars in line
+			self.scr.addstr(line, self.W - remChars, ' ' * remChars, backStyle)
+		for keyword in keys:
+			k = sugText.lower().find(keyword)
+			if k > -1:
+				keywordCase = sugText[k:k+len(keyword)]
+				self.scr.addstr(line, k, keywordCase, backStyle)
 
 	def displaySuggestions(self):
 		currSuggestions = self.getOnScreenSuggestions()
