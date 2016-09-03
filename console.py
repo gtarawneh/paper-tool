@@ -107,6 +107,7 @@ class Console:
 		subprocess.Popen(p, stderr = FNULL)
 
 	def writeQueryLine(self):
+		self.scr.leaveok(True)
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
 		self.clearLine(self.queryLine)
@@ -114,6 +115,7 @@ class Console:
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
 		self.scr.addstr(self.queryLine, 0, self.prompt + self.query, queryStyle)
+		self.scr.leaveok(False)
 
 	def resizeWindow(self):
 		self.H, self.W = self.scr.getmaxyx()
@@ -146,9 +148,8 @@ class Console:
 
 	def loopConsole(self):
 		self.resizeWindow()
-		self.lastDispTime = time.time() - 5
-		self.absSelected = 0
-		self.searcher.startSearch()
+		self.lastDispTime = time.time()
+		self.startSearch()
 		# main loop
 		while True:
 			# search (if necessary)
@@ -162,9 +163,7 @@ class Console:
 				self.lastDispTime = currTime
 				self.pages = math.ceil(float(sugCount) / sugLineCount)
 				self.absSelected = sugLineCount * self.page + self.selected
-			self.scr.leaveok(True)
 			self.writeQueryLine()
-			self.scr.leaveok(False)
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
 			self.scr.timeout(-1 if self.searcher.isSearchComplete() else 0)
