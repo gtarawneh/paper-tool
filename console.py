@@ -221,10 +221,7 @@ class Console:
 				self.displayPDF(file)
 			elif c == curses.KEY_DC:
 				self.query = ''
-				self.absSelected = 0
-				self.page = 0
-				self.selected = 0
-				self.searcher.startSearch()
+				self.startSearch()
 			elif c == curses.KEY_RIGHT:
 				if not self.searcher.paperFilter:
 					papInd = self.searcher.getPaperIndex(self.absSelected)
