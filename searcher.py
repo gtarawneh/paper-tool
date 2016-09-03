@@ -13,6 +13,7 @@ class Searcher:
 	searchIndex = 0
 	searchInds = []
 	cache = {}
+	cachingEnabled = False
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
@@ -26,7 +27,9 @@ class Searcher:
 			query = " ".join(self.keys)[:-1]
 			self.keys = keys
 			self.suggestions = []
-			self.searchInds = self.cache.get(query, range(len(self.content)))
+			fullRange = range(len(self.content))
+			cachedRange = self.cache.get(query, fullRange)
+			self.searchInds = cachedRange if self.cachingEnabled else fullRange
 			self.searchIndex = 0
 		else:
 			self.suggestions = range(0, len(self.content))
