@@ -14,6 +14,7 @@ class Searcher:
 	searchInds = []
 	cache = {}
 	cachingEnabled = False
+	paperFilter = []
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
@@ -23,17 +24,21 @@ class Searcher:
 		self.startSearch([])
 
 	def startSearch(self, keys = []):
+		n = len(self.content)
+		if self.paperFilter:
+			fullRange = [i for i in range(n) if self.indexList[i] in self.paperFilter]
+		else:
+			fullRange = range(n)
 		if keys:
 			query = " ".join(self.keys)[:-1]
 			self.keys = keys
 			self.suggestions = []
-			fullRange = range(len(self.content))
 			cachedRange = self.cache.get(query, fullRange)
 			self.searchInds = cachedRange if self.cachingEnabled else fullRange
 			self.searchIndex = 0
 		else:
-			self.suggestions = range(0, len(self.content))
-			searchIndex = len(self.content)
+			self.suggestions = fullRange
+			searchIndex = len(fullRange)
 
 	def continueSearch(self):
 		# search (if necessary)
@@ -77,9 +82,12 @@ class Searcher:
 		else:
 			return ''
 
-	def _getSentenceInfo(self, ind):
-		selSug = self.suggestions[ind]
-		papInd = self.indexList[selSug]
+	def getPaperIndex(self, sugInd):
+		senInd = self.suggestions[sugInd]
+		return self.indexList[senInd]
+
+	def _getSentenceInfo(self, sugInd):
+		papInd = self.getPaperIndex(sugInd)
 		return self.infoList[papInd]
 
 	def getURL(self, ind):

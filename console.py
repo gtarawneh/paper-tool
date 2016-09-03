@@ -18,6 +18,7 @@ class Console:
 	H = 0
 	scr = None
 	searcher = None
+	prompt = '> '
 
 	def __init__(self, searcher):
 		self.searcher = searcher
@@ -112,7 +113,7 @@ class Console:
 		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.searcher.suggestions), self.page + 1, self.pages)
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
-		self.scr.addstr(self.queryLine, 0, '> ' + self.query, queryStyle)
+		self.scr.addstr(self.queryLine, 0, self.prompt + self.query, queryStyle)
 
 	def resizeWindow(self):
 		self.H, self.W = self.scr.getmaxyx()
@@ -224,14 +225,27 @@ class Console:
 				self.page = 0
 				self.selected = 0
 				self.searcher.startSearch()
-			elif c in [curses.KEY_LEFT, curses.KEY_RIGHT]:
-				pass
+			elif c == curses.KEY_RIGHT:
+				if not self.searcher.paperFilter:
+					papInd = self.searcher.getPaperIndex(self.absSelected)
+					self.searcher.paperFilter = [papInd]
+					self.query = ''
+					self.prompt = 'Paper> '
+					self.startSearch()
+			elif c == curses.KEY_LEFT:
+				if self.searcher.paperFilter:
+					self.searcher.paperFilter = []
+					self.prompt = '> '
+					self.startSearch()
 			elif c in range(256):
 				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
-				self.searcher.startSearch(self.getKeys(self.query))
-				self.scr.timeout(0) # non-blocking
-				self.absSelected = 0
-				self.page = 0
-				self.selected = 0
+				self.startSearch()
 			else:
 				raise Exception('unsupported key: %d' % c)
+
+	def startSearch(self):
+		self.searcher.startSearch(self.getKeys(self.query))
+		self.scr.timeout(0) # non-blocking
+		self.absSelected = 0
+		self.page = 0
+		self.selected = 0
