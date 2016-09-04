@@ -34,6 +34,7 @@ class Console:
 		curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)
 		curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLACK)
 		curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
+		curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_WHITE)
 
 	def deinit(self):
 		curses.nocbreak()
@@ -62,27 +63,37 @@ class Console:
 		style1 = curses.color_pair(1) + curses.A_BOLD
 		style2 = curses.color_pair(3) + curses.A_BOLD
 		style3 = curses.color_pair(4)
+		style4 = curses.color_pair(5)
 		backStyle = style2 if isHighlight else style1
 		infoStyle = style2 if isHighlight else style3
+		lineStyle = curses.color_pair(3 if isHighlight else 0)
 		sugText, sugInfo = self.searcher.getSuggestion(sugInd)
 		sugText = sugText[0:self.W] + ' '
-		lineStyle = curses.color_pair(3 if isHighlight else 0)
-		# self.clearLine(line)
-		self.scr.addstr(line, 0, sugText, lineStyle)
-		remChars = self.W - len(sugText)
-		if remChars > 0:
+		# sugText = '%02d. %s' % (line, sugText)
+		# remChars = self.W
+		h = 0 # horizontal index
+		if h < self.W:
+			lineNumStr = '%02d. ' % line
+			self.scr.addstr(line, h, lineNumStr, style4)
+			h += len(lineNumStr)
+		if h < self.W:
+			self.scr.addstr(line, h, sugText, lineStyle)
+			for keyword in keys:
+				k = sugText.lower().find(keyword)
+				if (k > -1) and (h+k < self.W):
+					keywordCase = sugText[k:k+len(keyword)]
+					remChars = self.W - (h + k)
+					self.scr.addstr(line, h + k, keywordCase[:remChars], backStyle)
+			h += len(sugText)
+		if h < self.W:
 			# display line info
+			remChars = self.W - h
 			infoCropped = sugInfo[:remChars]
-			self.scr.addstr(line, len(sugText), infoCropped, infoStyle)
-			remChars -= len(infoCropped)
-		if remChars > 0:
+			self.scr.addstr(line, h, infoCropped, infoStyle)
+			h += len(infoCropped)
+		if h < self.W:
 			# clear remaining chars in line
-			self.scr.addstr(line, self.W - remChars, ' ' * remChars, backStyle)
-		for keyword in keys:
-			k = sugText.lower().find(keyword)
-			if k > -1:
-				keywordCase = sugText[k:k+len(keyword)]
-				self.scr.addstr(line, k, keywordCase, backStyle)
+			self.scr.addstr(line, h, ' ' * (self.W - h), backStyle)
 
 	def displaySuggestions(self):
 		currSuggestions = self.getOnScreenSuggestions()
