@@ -19,6 +19,7 @@ class Console:
 	scr = None
 	searcher = None
 	prompt = '> '
+	oldKeys = []
 
 	def __init__(self, searcher):
 		self.searcher = searcher
@@ -144,6 +145,7 @@ class Console:
 			keys += parts[i].split(' ')
 		for i in xrange(1, len(parts), 2):
 			keys.append(parts[i])
+		keys = filter(len, keys) # remove empty keys
 		return keys
 
 	def loopConsole(self):
@@ -240,8 +242,11 @@ class Console:
 				raise Exception('unsupported key: %d' % c)
 
 	def startSearch(self):
-		self.searcher.startSearch(self.getKeys(self.query))
-		self.scr.timeout(0) # non-blocking
-		self.absSelected = 0
-		self.page = 0
-		self.selected = 0
+		newKeys = self.getKeys(self.query)
+		if newKeys != self.oldKeys:
+			self.searcher.startSearch(newKeys)
+			self.scr.timeout(0) # non-blocking
+			self.absSelected = 0
+			self.page = 0
+			self.selected = 0
+			self.oldKeys = newKeys
