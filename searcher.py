@@ -38,6 +38,7 @@ class Searcher:
 			self.searchIndex = 0
 		else:
 			self.suggestions = fullRange
+			self.keys = []
 			searchIndex = len(fullRange)
 
 	def continueSearch(self):

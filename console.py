@@ -145,7 +145,7 @@ class Console:
 			keys += parts[i].split(' ')
 		for i in xrange(1, len(parts), 2):
 			keys.append(parts[i])
-		keys = filter(len, keys) # remove empty keys
+		keys = filter(None, keys) # remove empty keys
 		return keys
 
 	def loopConsole(self):
@@ -235,8 +235,12 @@ class Console:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
 					self.startSearch()
+			elif c == 127:
+				# backspace
+				self.query = self.query[:-1]
+				self.startSearch()
 			elif c in range(256):
-				self.query = self.query[:-1] if (c == 127) else self.query + unichr(c)
+				self.query += unichr(c)
 				self.startSearch()
 			else:
 				raise Exception('unsupported key: %d' % c)
