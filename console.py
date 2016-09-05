@@ -241,7 +241,8 @@ class Console:
 				if not self.searcher.paperFilter:
 					papInd = self.searcher.getPaperIndex(self.absSelected)
 					self.searcher.paperFilter = [papInd]
-					self.sentenceModeCache = self.query
+					self.sentenceModeCache = (self.query, self.absSelected)
+					self.searcher.backup('sentence')
 					self.query = ''
 					self.prompt = 'Paper> '
 					self.startSearch()
@@ -250,8 +251,9 @@ class Console:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
 					self.oldKeys = None
-					self.query = self.sentenceModeCache
-					self.startSearch()
+					self.query, self.absSelected = self.sentenceModeCache
+					self.searcher.restore('sentence')
+					self.resizeWindow()
 			elif c == 127:
 				# backspace
 				self.query = self.query[:-1]

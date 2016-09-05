@@ -15,6 +15,7 @@ class Searcher:
 	cache = {}
 	cachingEnabled = False
 	paperFilter = []
+	backups  = {}
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
@@ -40,6 +41,14 @@ class Searcher:
 			self.suggestions = fullRange
 			self.keys = []
 			searchIndex = len(fullRange)
+
+	def backup(self, key):
+		self.backups[key] = \
+			(self.searchInds, self.searchIndex, self.suggestions, self.keys)
+
+	def restore(self, key):
+		(self.searchInds, self.searchIndex, self.suggestions, self.keys) = \
+			self.backups[key]
 
 	def continueSearch(self):
 		# search (if necessary)
