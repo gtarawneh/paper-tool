@@ -68,15 +68,15 @@ class Console:
 		infoStyle = style2 if isHighlight else style3
 		lineStyle = curses.color_pair(3 if isHighlight else 0)
 		sugText, sugInfo = self.searcher.getSuggestion(sugInd)
-		sugText = sugText[0:self.W] + ' '
-		# sugText = '%02d. %s' % (line, sugText)
-		# remChars = self.W
+		sugText += ' '
 		h = 0 # horizontal index
 		if h < self.W:
 			lineNumStr = '%02d. ' % line
 			self.scr.addstr(line, h, lineNumStr, style4)
 			h += len(lineNumStr)
 		if h < self.W:
+			remChars = self.W - h
+			sugText = sugText[:remChars]
 			self.scr.addstr(line, h, sugText, lineStyle)
 			for keyword in keys:
 				k = sugText.lower().find(keyword)
