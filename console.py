@@ -264,6 +264,9 @@ class Console:
 							self.absSelected = newSel
 							self.resizeWindow()
 					self.digits = []
+			elif c == 27:
+				# escape
+				self.digits = []
 			elif c in range(256):
 				self.query += unichr(c)
 				self.startSearch()
