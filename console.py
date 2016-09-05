@@ -21,6 +21,7 @@ class Console:
 	prompt = '> '
 	oldKeys = []
 	digits = []
+	sentenceModeCache = None
 
 	def __init__(self, searcher):
 		self.searcher = searcher
@@ -240,6 +241,7 @@ class Console:
 				if not self.searcher.paperFilter:
 					papInd = self.searcher.getPaperIndex(self.absSelected)
 					self.searcher.paperFilter = [papInd]
+					self.sentenceModeCache = self.query
 					self.query = ''
 					self.prompt = 'Paper> '
 					self.startSearch()
@@ -248,7 +250,7 @@ class Console:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
 					self.oldKeys = None
-					self.query = ''
+					self.query = self.sentenceModeCache
 					self.startSearch()
 			elif c == 127:
 				# backspace
