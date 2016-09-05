@@ -20,6 +20,7 @@ class Console:
 	searcher = None
 	prompt = '> '
 	oldKeys = []
+	digits = []
 
 	def __init__(self, searcher):
 		self.searcher = searcher
@@ -250,6 +251,19 @@ class Console:
 				# backspace
 				self.query = self.query[:-1]
 				self.startSearch()
+				self.digits = []
+			elif c in range(48, 68):
+				# digit
+				digit = c - 48
+				self.digits += [digit]
+				if len(self.digits)>1:
+					sel = self.digits[0] * 10 + self.digits[1]
+					if sel < len(self.suggestionLines):
+						newSel = self.page * len(self.suggestionLines) + sel
+						if newSel < self.searcher.getSuggestionCount():
+							self.absSelected = newSel
+							self.resizeWindow()
+					self.digits = []
 			elif c in range(256):
 				self.query += unichr(c)
 				self.startSearch()
