@@ -247,6 +247,8 @@ class Console:
 				if self.searcher.paperFilter:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
+					self.oldKeys = None
+					self.query = ''
 					self.startSearch()
 			elif c == 127:
 				# backspace
