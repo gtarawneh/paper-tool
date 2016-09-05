@@ -232,7 +232,8 @@ class Console:
 				# ctrl-p
 				file = self.searcher.getFile(self.absSelected)
 				self.displayPDF(file)
-			elif c == curses.KEY_DC:
+			elif c == 21:
+				# ctrl-u
 				self.query = ''
 				self.startSearch()
 			elif c == curses.KEY_RIGHT:
@@ -267,6 +268,10 @@ class Console:
 			elif c == 27:
 				# escape
 				self.digits = []
+			elif c == curses.KEY_DC:
+				words = self.query.split(' ')
+				self.query = ' '.join(words[:-1])
+				self.startSearch()
 			elif c in range(256):
 				self.query += unichr(c)
 				self.startSearch()
