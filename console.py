@@ -7,21 +7,17 @@ from searcher import Searcher
 
 class Console:
 
-	query = ''
-	searchedLines = 0
-	selected = 0
-	page = 0
-	pages = 0
-	absSelected = 0
-	querLine = 0
-	W = 0
-	H = 0
-	scr = None
-	searcher = None
-	prompt = '> '
-	oldKeys = []
-	digits = []
-	sentenceModeCache = None
+	query = '' # contents of query line
+	selected = 0 # highlighted suggestion index (relative to page)
+	page = 0 # current page
+	absSelected = 0 # highlighted suggestion index (absolute)
+	W = 0 # screen width (chars)
+	H = 0 # screen height (chars)
+	scr = None # curses screen object
+	searcher = None # searcher object
+	prompt = '> ' # query line prompt
+	digits = [] # buffer to hold digit key presses
+	sentenceModeCache = None # tuple to backup sentence mode details
 
 	def __init__(self, searcher):
 		self.searcher = searcher
@@ -121,25 +117,27 @@ class Console:
 		subprocess.Popen(p, stderr = FNULL)
 
 	def writeQueryLine(self):
+		queryLine = self.H - 1
 		self.scr.leaveok(True)
 		queryStyle = curses.color_pair(2) + curses.A_BOLD
 		statusStyle = curses.color_pair(2) + curses.A_BOLD
-		self.clearLine(self.queryLine)
-		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, len(self.searcher.suggestions), self.page + 1, self.pages)
+		self.clearLine(queryLine)
+		sugCount = self.searcher.getSuggestionCount()
+		pageCount = self.getPageCount()
+		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, sugCount, self.page + 1, pageCount)
 		rightInd = self.W - 1 - len(rightSide)
-		self.scr.addstr(self.queryLine, rightInd, rightSide, statusStyle)
-		self.scr.addstr(self.queryLine, 0, self.prompt + self.query, queryStyle)
+		self.scr.addstr(queryLine, rightInd, rightSide, statusStyle)
+		self.scr.addstr(queryLine, 0, self.prompt + self.query, queryStyle)
 		self.scr.leaveok(False)
 
 	def resizeWindow(self):
 		self.H, self.W = self.scr.getmaxyx()
 		self.suggestionLines = range(0, self.H - 2)
-		self.queryLine = self.H - 1
 		maxSuggestions = len(self.suggestionLines)
 		# work out new page and selected values of current highligh
 		self.page = int(math.floor(float(self.absSelected) / len(self.suggestionLines)))
 		self.selected = self.absSelected % len(self.suggestionLines)
-		self.scr.hline(self.H-2, 0, "-", self.W)
+		self.scr.hline(self.H - 2, 0, "-", self.W)
 
 	def getKeys(self, query):
 		# splits an input query into `keys` (terms)
@@ -176,7 +174,6 @@ class Console:
 			if (elapsed > 0.25) or (sugCount >= sugLineCount) or self.searcher.isSearchComplete():
 				self.displaySuggestions()
 				self.lastDispTime = currTime
-				self.pages = math.ceil(float(sugCount) / sugLineCount)
 				self.absSelected = sugLineCount * self.page + self.selected
 			self.writeQueryLine()
 			self.scr.refresh()
@@ -205,7 +202,7 @@ class Console:
 					prevLines = sugLineCount * self.page
 					remainingLines = len(self.searcher.suggestions) - prevLines
 					self.selected = min(sugLineCount-1, remainingLines-1)
-				elif self.page < self.pages-1:
+				elif self.page < self.getPageCount()-1:
 					# end of current page (and further page exists)
 					self.absSelected += sugLineCount
 					self.absSelected = min(self.absSelected, len(self.searcher.suggestions)-1)
@@ -250,15 +247,15 @@ class Console:
 				if self.searcher.paperFilter:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
-					self.oldKeys = None
 					self.query, self.absSelected = self.sentenceModeCache
 					self.searcher.restore('sentence')
 					self.resizeWindow()
 			elif c == 127:
 				# backspace
+				isLastCharSpace = self.query[-1] == ' '
 				self.query = self.query[:-1]
-				self.startSearch()
-				self.digits = []
+				if not isLastCharSpace:
+					self.startSearch()
 			elif c in range(48, 68):
 				# digit
 				digit = c - 48
@@ -278,18 +275,24 @@ class Console:
 				words = self.query.split(' ')
 				self.query = ' '.join(words[:-1])
 				self.startSearch()
+				self.query += unichr(c)
 			elif c in range(256):
 				self.query += unichr(c)
-				self.startSearch()
+				# search is ignored if c is space
+				if not c in [32]:
+					self.startSearch()
 			else:
 				raise Exception('unsupported key: %d' % c)
 
 	def startSearch(self):
 		newKeys = self.getKeys(self.query)
-		if newKeys != self.oldKeys:
-			self.searcher.startSearch(newKeys)
-			self.scr.timeout(0) # non-blocking
-			self.absSelected = 0
-			self.page = 0
-			self.selected = 0
-			self.oldKeys = newKeys
+		self.searcher.startSearch(newKeys)
+		self.scr.timeout(0) # non-blocking
+		self.absSelected = 0
+		self.page = 0
+		self.selected = 0
+
+	def getPageCount(self):
+		sugCount = len(self.searcher.suggestions)
+		sugLineCount = len(self.suggestionLines)
+		return math.ceil(float(sugCount) / sugLineCount)
