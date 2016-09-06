@@ -4,18 +4,18 @@ class Searcher:
 	# indexList is a corresponding array of entries in infoList
 	# infoList is a list of tupes (title, authors, year)
 
-	content = []
-	lcontent = []
-	indexList = []
-	infoList = []
-	keys = []
-	suggestions = []
-	searchIndex = 0
-	searchInds = []
-	cache = {}
+	content = [] # list of sentences
+	lcontent = [] # same as content but lower-cased (for search)
+	indexList = [] # paper indices of sentences
+	infoList = [] # info indices of papers
+	keys = [] # search keys
+	suggestions = [] # suggested sentences (indices)
+	searchIndex = 0 # index of search pointer
+	searchInds = [] # sub-list of sentences to search
+	cache = {} # dict for caching search results
 	cachingEnabled = False
-	paperFilter = []
-	backups  = {}
+	paperFilter = [] # limit search to given paper indices
+	backups  = {} # dict for search backups
 
 	def __init__(self, content, indexList, infoList):
 		self.content = content
