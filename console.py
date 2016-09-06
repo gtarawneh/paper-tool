@@ -8,9 +8,8 @@ from searcher import Searcher
 class Console:
 
 	query = '' # contents of query line
-	selected = 0 # highlighted suggestion index (relative to page)
 	page = 0 # current page
-	absSelected = 0 # highlighted suggestion index (absolute)
+	selected = 0 # highlighted suggestion index.
 	W = 0 # screen width (chars)
 	H = 0 # screen height (chars)
 	scr = None # curses screen object
@@ -98,11 +97,15 @@ class Console:
 		for i, sugInd in enumerate(currSuggestions):
 			if i not in self.suggestionLines:
 				break
-			isHighlight = i == self.selected
+			isHighlight = i == self.getRelSelected()
 			self.displaySuggestion(sugInd, i, isHighlight, self.searcher.keys)
 		# clear unused lines
 		for i in range(len(currSuggestions), len(self.suggestionLines)):
 			self.clearLine(i)
+
+	def getRelSelected(self):
+		# returns index of selection relative to top of current page
+		return self.selected - self.page * len(self.suggestionLines)
 
 	def displayWebPage(self, url):
 		# open up doi link in browser
@@ -124,7 +127,7 @@ class Console:
 		self.clearLine(queryLine)
 		sugCount = self.searcher.getSuggestionCount()
 		pageCount = self.getPageCount()
-		rightSide = "(%d/%d) [page %d/%d]" % (self.absSelected + 1, sugCount, self.page + 1, pageCount)
+		rightSide = "(%d/%d) [page %d/%d]" % (self.selected + 1, sugCount, self.page + 1, pageCount)
 		rightInd = self.W - 1 - len(rightSide)
 		self.scr.addstr(queryLine, rightInd, rightSide, statusStyle)
 		self.scr.addstr(queryLine, 0, self.prompt + self.query, queryStyle)
@@ -135,8 +138,8 @@ class Console:
 		self.suggestionLines = range(0, self.H - 2)
 		maxSuggestions = len(self.suggestionLines)
 		# work out new page and selected values of current highligh
-		self.page = int(math.floor(float(self.absSelected) / len(self.suggestionLines)))
-		self.selected = self.absSelected % len(self.suggestionLines)
+		self.page = int(math.floor(float(self.selected) / len(self.suggestionLines)))
+		# self.getRelSelected() = self.selected % len(self.suggestionLines)
 		self.scr.hline(self.H - 2, 0, "-", self.W)
 
 	def getKeys(self, query):
@@ -174,7 +177,7 @@ class Console:
 			if (elapsed > 0.25) or (sugCount >= sugLineCount) or self.searcher.isSearchComplete():
 				self.displaySuggestions()
 				self.lastDispTime = currTime
-				self.absSelected = sugLineCount * self.page + self.selected
+				self.selected = sugLineCount * self.page + self.getRelSelected()
 			self.writeQueryLine()
 			self.scr.refresh()
 			# set input as blocking (only) when search completes
@@ -189,46 +192,46 @@ class Console:
 			elif c == curses.KEY_RESIZE:
 				self.resizeWindow()
 			elif c == curses.KEY_DOWN:
-				if self.absSelected < sugCount-1:
-					self.absSelected += 1
+				if self.selected < sugCount-1:
+					self.selected += 1
 					self.resizeWindow()
 			elif c == curses.KEY_UP:
-				if self.absSelected > 0:
-					self.absSelected -= 1
+				if self.selected > 0:
+					self.selected -= 1
 					self.resizeWindow()
 			elif c == curses.KEY_NPAGE:
-				if self.selected < sugLineCount-1:
+				maxSelected = len(self.searcher.suggestions) - 1
+				endPageSelected = (self.page + 1) * sugLineCount - 1
+				newSelected = min(maxSelected, endPageSelected)
+				if newSelected != self.selected:
 					# not at end of current page
-					prevLines = sugLineCount * self.page
-					remainingLines = len(self.searcher.suggestions) - prevLines
-					self.selected = min(sugLineCount-1, remainingLines-1)
+					self.selected = newSelected
 				elif self.page < self.getPageCount()-1:
 					# end of current page (and further page exists)
-					self.absSelected += sugLineCount
-					self.absSelected = min(self.absSelected, len(self.searcher.suggestions)-1)
+					self.selected = min(self.selected + sugLineCount, maxSelected)
 					self.resizeWindow()
 			elif c == curses.KEY_END:
-				self.absSelected = len(self.searcher.suggestions) - 1
+				self.selected = len(self.searcher.suggestions) - 1
 				self.resizeWindow()
 			elif c == curses.KEY_HOME:
-				self.absSelected = 0
+				self.selected = 0
 				self.resizeWindow()
 			elif c == curses.KEY_PPAGE:
-				if self.selected > 0:
+				if self.getRelSelected() > 0:
 					# not on top of current page
-					self.absSelected -= self.selected
+					self.selected -= self.getRelSelected()
 					self.resizeWindow()
 				elif self.page > 0:
 					# on top of current page (and previous page exists)
-					self.absSelected -= sugLineCount
+					self.selected -= sugLineCount
 					self.resizeWindow()
 			elif c == 23:
 				# ctrl-w
-				url = self.searcher.getURL(self.absSelected)
+				url = self.searcher.getURL(self.selected)
 				self.displayWebPage(url)
 			elif c == 16:
 				# ctrl-p
-				file = self.searcher.getFile(self.absSelected)
+				file = self.searcher.getFile(self.selected)
 				self.displayPDF(file)
 			elif c == 21:
 				# ctrl-u
@@ -236,9 +239,9 @@ class Console:
 				self.startSearch()
 			elif c == curses.KEY_RIGHT:
 				if not self.searcher.paperFilter:
-					papInd = self.searcher.getPaperIndex(self.absSelected)
+					papInd = self.searcher.getPaperIndex(self.selected)
 					self.searcher.paperFilter = [papInd]
-					self.sentenceModeCache = (self.query, self.absSelected)
+					self.sentenceModeCache = (self.query, self.selected)
 					self.searcher.backup('sentence')
 					self.query = ''
 					self.prompt = 'Paper> '
@@ -247,7 +250,7 @@ class Console:
 				if self.searcher.paperFilter:
 					self.searcher.paperFilter = []
 					self.prompt = '> '
-					self.query, self.absSelected = self.sentenceModeCache
+					self.query, self.selected = self.sentenceModeCache
 					self.searcher.restore('sentence')
 					self.resizeWindow()
 			elif c == 127:
@@ -265,7 +268,7 @@ class Console:
 					if sel < len(self.suggestionLines):
 						newSel = self.page * len(self.suggestionLines) + sel
 						if newSel < self.searcher.getSuggestionCount():
-							self.absSelected = newSel
+							self.selected = newSel
 							self.resizeWindow()
 					self.digits = []
 			elif c == 27:
@@ -288,9 +291,8 @@ class Console:
 		newKeys = self.getKeys(self.query)
 		self.searcher.startSearch(newKeys)
 		self.scr.timeout(0) # non-blocking
-		self.absSelected = 0
-		self.page = 0
 		self.selected = 0
+		self.page = 0
 
 	def getPageCount(self):
 		sugCount = len(self.searcher.suggestions)
