@@ -255,7 +255,7 @@ class Console:
 					self.resizeWindow()
 			elif c == 127:
 				# backspace
-				isLastCharSpace = self.query[-1] == ' '
+				isLastCharSpace = self.query and (self.query[-1] == ' ')
 				self.query = self.query[:-1]
 				if not isLastCharSpace:
 					self.startSearch()
@@ -290,7 +290,7 @@ class Console:
 	def startSearch(self):
 		newKeys = self.getKeys(self.query)
 		self.searcher.startSearch(newKeys)
-		self.scr.timeout(0) # non-blocking
+		self.scr.timeout(0) # make input non-blocking
 		self.selected = 0
 		self.page = 0
 
