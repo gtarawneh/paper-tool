@@ -278,7 +278,6 @@ class Console:
 				words = self.query.split(' ')
 				self.query = ' '.join(words[:-1])
 				self.startSearch()
-				self.query += unichr(c)
 			elif c in range(256):
 				self.query += unichr(c)
 				# search is ignored if c is space
