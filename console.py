@@ -276,8 +276,8 @@ class Console:
 				# escape
 				self.digits = []
 			elif c == curses.KEY_DC:
-				words = self.query.split(' ')
-				self.query = ' '.join(words[:-1])
+				words = self.query.split()[:-1]
+				self.query = ' '.join(words) + (' ' if words else '')
 				self.startSearch()
 			elif c in range(256):
 				self.query += unichr(c)
