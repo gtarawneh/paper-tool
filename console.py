@@ -64,12 +64,13 @@ class Console:
 		backStyle = style2 if isHighlight else style1
 		infoStyle = style2 if isHighlight else style3
 		lineStyle = curses.color_pair(3 if isHighlight else 0)
+		lineNumStyle = style2 if isHighlight else style4
 		sugText, sugInfo = self.searcher.getSuggestion(sugInd)
 		sugText += ' '
 		h = 0 # horizontal index
 		if h < self.W:
 			lineNumStr = '%02d. ' % line
-			self.scr.addstr(line, h, lineNumStr, style4)
+			self.scr.addstr(line, h, lineNumStr, lineNumStyle)
 			h += len(lineNumStr)
 		if h < self.W:
 			remChars = self.W - h
