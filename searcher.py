@@ -50,14 +50,20 @@ class Searcher:
 		(self.searchInds, self.searchIndex, self.suggestions, self.keys) = \
 			self.backups[key]
 
+	def areKeysPresent(self, line, keys):
+		# returns true when line contains all keys, false otherwise
+		for k in keys:
+			if line.find(k) == -1:
+				return False
+		return True
+
 	def continueSearch(self):
 		# search (if necessary)
 		blockEnd = min(self.searchIndex + 10000, len(self.searchInds))
 		for j in range(self.searchIndex, blockEnd):
 			i = self.searchInds[j]
 			line = self.lcontent[i]
-			matches = [line.find(k) for k in self.keys]
-			if not -1 in matches:
+			if self.areKeysPresent(line, self.keys):
 				self.suggestions.append(i)
 		self.searchIndex = blockEnd
 		if self.isSearchComplete():
