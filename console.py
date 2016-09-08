@@ -175,7 +175,7 @@ class Console:
 			sugLineCount = len(self.suggestionLines)
 			currTime = time.time()
 			elapsed = currTime - self.lastDispTime
-			if (elapsed > 0.25) or (sugCount >= sugLineCount) or self.searcher.isSearchComplete():
+			if (elapsed > 0.5) or (sugCount >= sugLineCount) or self.searcher.isSearchComplete():
 				self.displaySuggestions()
 				self.lastDispTime = currTime
 				self.selected = sugLineCount * self.page + self.getRelSelected()
