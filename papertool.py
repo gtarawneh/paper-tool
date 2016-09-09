@@ -11,18 +11,18 @@ senFile = 'sentences.txt'
 infoFile = 'paper-crossref.json'
 indexFile = 'index.json'
 
-def getContent():
-	with open(getAbsolutePath(senFile)) as f:
+def getContent(libDir):
+	with open(getAbsolutePath(libDir, senFile)) as f:
 		content = f.read().splitlines()
-	with open(getAbsolutePath(infoFile)) as f:
+	with open(getAbsolutePath(libDir, infoFile)) as f:
 		infoList = json.load(f)
-	with open(getAbsolutePath(indexFile)) as f:
+	with open(getAbsolutePath(libDir, indexFile)) as f:
 		indexList = json.load(f)
 	return (content, indexList, infoList)
 
-def getAbsolutePath(file):
-	scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]))
-	return os.path.join(scriptPath, file)
+def getAbsolutePath(libDir, file):
+	# scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]))
+	return os.path.join(libDir, file)
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
@@ -38,17 +38,24 @@ def getSuggestions(content, subList, keys, maxCount):
 				return (results, searchedLines)
 	return results
 
+def printUsage():
+	print("Usage: papertool.py <library>\n")
+
 def main():
-	content, indexList, infoList =  getContent()
-	searcher = Searcher(content, indexList, infoList)
-	getSuggestionFunc = getSuggestions
-	try:
-		con1 = Console(searcher)
-		con1.loopConsole()
-	except Exception as err:
+	if len(sys.argv)>1:
+		libDir = sys.argv[1]
+		content, indexList, infoList =  getContent(libDir)
+		searcher = Searcher(content, indexList, infoList)
+		getSuggestionFunc = getSuggestions
+		try:
+			con1 = Console(searcher)
+			con1.loopConsole()
+		except Exception as err:
+			con1.deinit()
+			traceback.print_exc(file=sys.stdout)
+			return
 		con1.deinit()
-		traceback.print_exc(file=sys.stdout)
-		return
-	con1.deinit()
+	else:
+		printUsage()
 
 main()
