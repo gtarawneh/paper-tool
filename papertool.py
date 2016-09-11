@@ -1,5 +1,6 @@
 #!/bin/python
 
+import os
 import sys
 import traceback
 import math
@@ -10,14 +11,17 @@ from console import *
 senFile = 'sentences.txt'
 infoFile = 'paper-crossref.json'
 indexFile = 'index.json'
+optionsfile = '.papertool'
 
-def getContent(libDir):
+def loadJSON(file):
+	with open(file) as f:
+		return json.load(f)
+
+def loadLibrary(libDir):
 	with open(getAbsolutePath(libDir, senFile)) as f:
 		content = f.read().splitlines()
-	with open(getAbsolutePath(libDir, infoFile)) as f:
-		infoList = json.load(f)
-	with open(getAbsolutePath(libDir, indexFile)) as f:
-		indexList = json.load(f)
+	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
+	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
 	return (content, indexList, infoList)
 
 def getAbsolutePath(libDir, file):
@@ -38,13 +42,22 @@ def getSuggestions(content, subList, keys, maxCount):
 				return (results, searchedLines)
 	return results
 
+def loadOptions():
+	homeDir = os.getenv("HOME")
+	fullOptionsFile = getAbsolutePath(homeDir, optionsfile)
+	if os.path.isfile(fullOptionsFile):
+		return loadJSON(fullOptionsFile)
+	else:
+		return {}
+
 def printUsage():
 	print("Usage: papertool.py <library>\n")
 
 def main():
-	if len(sys.argv)>1:
-		libDir = sys.argv[1]
-		content, indexList, infoList =  getContent(libDir)
+	options = loadOptions()
+	libDir = sys.argv[1] if (len(sys.argv) > 1) else options.get("library", None).encode("ascii")
+	if libDir is not None:
+		content, indexList, infoList =  loadLibrary(libDir)
 		searcher = Searcher(content, indexList, infoList)
 		getSuggestionFunc = getSuggestions
 		try:
