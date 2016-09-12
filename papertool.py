@@ -14,8 +14,12 @@ indexFile = 'index.json'
 optionsfile = '.papertool'
 
 def loadJSON(file):
-	with open(file) as f:
-		return json.load(f)
+	try:
+		with open(file) as f:
+			return json.load(f)
+	except ValueError as e:
+		print(e)
+		raise Exception('Error encountered while parsing .papertool')
 
 def loadLibrary(libDir):
 	with open(getAbsolutePath(libDir, senFile)) as f:
