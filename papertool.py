@@ -55,8 +55,8 @@ def printUsage():
 
 def main():
 	options = loadOptions()
-	libDir = sys.argv[1] if (len(sys.argv) > 1) else options.get("library", None).encode("ascii")
-	if libDir is not None:
+	libDir = sys.argv[1] if (len(sys.argv) > 1) else options.get("library", "").encode("ascii")
+	if libDir:
 		content, indexList, infoList =  loadLibrary(libDir)
 		searcher = Searcher(content, indexList, infoList)
 		getSuggestionFunc = getSuggestions
