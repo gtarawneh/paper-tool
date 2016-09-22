@@ -6,7 +6,8 @@ import traceback
 import math
 import json
 
-from console import *
+import console
+import walker
 
 senFile = 'sentences.txt'
 infoFile = 'paper-crossref.json'
@@ -59,20 +60,34 @@ def printUsage():
 
 def main():
 	options = loadOptions()
-	libDir = sys.argv[1] if (len(sys.argv) > 1) else options.get("library", "").encode("ascii")
-	if libDir:
-		content, indexList, infoList =  loadLibrary(libDir)
-		searcher = Searcher(content, indexList, infoList)
-		getSuggestionFunc = getSuggestions
-		try:
-			con1 = Console(searcher)
-			con1.loopConsole()
-		except Exception as err:
-			con1.deinit()
-			traceback.print_exc(file=sys.stdout)
-			return
-		con1.deinit()
+	args = sys.argv[1:]
+	nargs = len(args)
+	if nargs>0:
+		if args[0] in ['-b', '--build']:
+			if nargs>2:
+				textDir = args[1]
+				libDir = args[2]
+				walker.buildLibrary(textDir, libDir)
+				return
 	else:
-		printUsage()
+		libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
+		if libDir:
+			startConsole(libDir)
+			return
+	# otherwise, unable to process command line arguments so:
+	printUsage()
+
+def startConsole(libDir):
+	content, indexList, infoList =  loadLibrary(libDir)
+	searcher = console.Searcher(content, indexList, infoList)
+	getSuggestionFunc = getSuggestions
+	try:
+		con1 = console.Console(searcher)
+		con1.loopConsole()
+	except Exception as err:
+		con1.deinit()
+		traceback.print_exc(file=sys.stdout)
+		return
+	con1.deinit()
 
 main()
