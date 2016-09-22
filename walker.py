@@ -9,8 +9,13 @@ def buildLibrary(textDir, libDir):
 	senFile = 'sentences.txt'
 	infoFile = 'paper-info.json'
 	indexFile = 'index.json'
-	if not os.path.exists(libDir):
+	if os.path.exists(libDir):
+		print('Warning: library directory exists, overwrite (y/n)?')
+		if not getYesNo():
+			return
+	else:
 		os.makedirs(libDir)
+	print('Started building library <%s> ...' % libDir)
 	sensFilePath = os.path.abspath(os.path.join(libDir, senFile))
 	infoFilePath = os.path.abspath(os.path.join(libDir, infoFile))
 	indexFilePath = os.path.abspath(os.path.join(libDir, indexFile))
@@ -47,12 +52,25 @@ def buildLibrary(textDir, libDir):
 	with open(sensFilePath, 'w') as f:
 		for line in content:
 			f.write("%s\n" % line)
-	print('completed building library <%s>' % libDir)
+	print('Completed')
 
 def writeJSON(d, file):
 	# writes dictionary d to file
 	with open(file, 'w') as f:
 		json.dump(d, f, sort_keys = True, indent = 4, ensure_ascii=True)
+
+# raw_input returns the empty string for "enter"
+def getYesNo():
+	yes = set(['yes','y', 'ye'])
+	no = set(['no','n'])
+	while True:
+		choice = raw_input().lower()
+		if choice in yes:
+		   return True
+		elif choice in no:
+		   return False
+		else:
+		   print("Please respond with 'yes' or 'no'")
 
 # print("meta & text files = %d (%1.1f%%)" % (metaFileCount, float(metaFileCount) / len(textFileList) * 100))
 # print("year fail = %d (%1.1f%%)" % (yearFail, float(yearFail) / len(textFileList) * 100))
