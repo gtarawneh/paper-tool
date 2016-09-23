@@ -78,10 +78,27 @@ def main():
 				return
 	libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
 	if libDir:
-		startConsole(libDir)
+		if checkLibrary(libDir):
+			startConsole(libDir)
 		return
 	# otherwise, unable to process command line arguments so:
 	printUsage()
+
+def checkLibrary(libDir):
+	# returns true when libDir and necessary files exist, False otherwise
+	if not os.path.exists(libDir):
+		print('library \'%s\' does not exist' % libDir)
+		return False
+	libFiles = [
+		os.path.join(libDir, senFile),
+		os.path.join(libDir, infoFile),
+		os.path.join(libDir, indexFile),
+	]
+	for f in libFiles:
+		if not os.path.isfile(f):
+			print('library file \'%s\' does not exist' % f)
+			return False
+	return True
 
 def startConsole(libDir):
 	content, indexList, infoList =  loadLibrary(libDir)
