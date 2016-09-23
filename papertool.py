@@ -30,13 +30,11 @@ def loadLibrary(libDir):
 	return (content, indexList, infoList)
 
 def getAbsolutePath(libDir, file):
-	# scriptPath = os.path.dirname(os.path.realpath(sys.argv[0]))
 	return os.path.join(libDir, file)
 
 def getSuggestions(content, subList, keys, maxCount):
 	results = []
 	searchedLines = 0
-	# for line in content:
 	for i in subList:
 		line = content[i]
 		searchedLines += 1
@@ -56,14 +54,23 @@ def loadOptions():
 		return {}
 
 def printUsage():
-	print("Usage: papertool.py <library>\n")
+	usage = [
+		'papertool',
+		'',
+		'Usage:',
+		'  papertool.py <libDir>',
+		'  papertool.py build <textDir> <libDir>',
+		'',
+	]
+	for line in usage:
+		print(line)
 
 def main():
 	options = loadOptions()
 	args = sys.argv[1:]
 	nargs = len(args)
 	if nargs>0:
-		if args[0] in ['-b', '--build']:
+		if args[0] == 'build':
 			if nargs>2:
 				textDir = args[1]
 				libDir = args[2]
