@@ -7,7 +7,7 @@ import sys
 
 def buildLibrary(textDir, libDir):
 	senFile = 'sentences.txt'
-	infoFile = 'paper-info.json'
+	infoFile = 'paper-crossref.json'
 	indexFile = 'index.json'
 	if os.path.exists(libDir):
 		print('Warning: library directory exists, overwrite (y/n)?')
@@ -21,7 +21,7 @@ def buildLibrary(textDir, libDir):
 	indexFilePath = os.path.abspath(os.path.join(libDir, indexFile))
 	# prepare list of text files:
 	textFileList = []
-	for root, dirs, files in os.walk("./text"):
+	for root, dirs, files in os.walk(textDir):
 		path = root.split('/')
 		for file in files:
 			textFile = os.path.abspath(os.path.join(root, file))
