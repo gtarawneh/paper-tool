@@ -76,11 +76,10 @@ def main():
 				libDir = args[2]
 				walker.buildLibrary(textDir, libDir)
 				return
-	else:
-		libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
-		if libDir:
-			startConsole(libDir)
-			return
+	libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
+	if libDir:
+		startConsole(libDir)
+		return
 	# otherwise, unable to process command line arguments so:
 	printUsage()
 
