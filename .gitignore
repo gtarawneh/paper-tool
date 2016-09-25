@@ -21,13 +21,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-sentences.txt
-index.json
-paper-info.json
 *.pyc
-*.xml
-meta/
-text/
 old/
-temp/
-paper-crossref.json
+*.jar
+*.bin
+
