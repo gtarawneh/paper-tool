@@ -186,7 +186,8 @@ class Console:
 			# grab input
 			c = self.scr.getch()
 			# process input
-			if c == 10:
+			if c == 10 or c == 4:
+				# Enter or ctrl-d
 				return
 			elif c == -1:
 				continue
