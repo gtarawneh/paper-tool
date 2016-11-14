@@ -40,26 +40,36 @@ def main():
 	dic = readJSON(libFile)
 	hmap = {entry["sha256"]:entry for entry in dic}
 	changes = False
+	# first, loop through files in the lib directory
+	fileList = []
 	for root, dirs, files in os.walk(libDir):
 		path = root.split('/')
 		for file in files:
-			file = os.path.abspath(os.path.join(root, file))
-			fileHash = getSHA256(file)
+			fullFile = os.path.abspath(os.path.join(root, file))
+			relFile = os.path.relpath(fullFile, libDir)
+			fileHash = getSHA256(fullFile)
+			fileList.append(relFile)
 			existingEntry = hmap.get(fileHash, None)
 			if existingEntry:
-				if file != existingEntry["file"]:
-					print("file moved: %s -> %s" % (existingEntry["file"], file))
-					existingEntry["file"] = file
+				if relFile != existingEntry["file"]:
+					print("file moved: %s -> %s" % (existingEntry["file"], relFile))
+					existingEntry["file"] = relFile
 					existingEntry["added"] = getDateTimeStamp()
 					changes = True
 			else:
-				print("found new file %s" % file)
+				print("found new file %s" % relFile)
 				dic.append({
-					"file": file,
+					"file": relFile,
 					"sha256": fileHash,
 					"added": getDateTimeStamp(),
 				});
 				changes = True
+	# check for deleted file
+	delFiles = [entry for entry in dic if entry["file"] not in fileList]
+	for entry in delFiles:
+		print("file deleted: %s" % entry["file"])
+		changes = True
+		dic.remove(entry)
 	if changes:
 		writeJSON(libFile, dic)
 	else:
