@@ -99,8 +99,19 @@ def reformatBibtex(bibStr):
 	bib = pybtex.database.parse_string(bibStr, "bibtex")
 	return bib.to_string('bibtex')
 
+def searchTitle(title):
+	# api doc: https://github.com/CrossRef/rest-api-doc/blob/master/rest_api.md
+	escaped = urllib2.quote(title)
+	url = "https://api.crossref.org/works?query.title=%s&rows=1" % escaped
+	result = urllib2.urlopen(url).read()
+	dic = json.loads(result)
+	for item in dic["message"]["items"]:
+		print "%s : %s" % (item["DOI"], item["title"][0])
+
 bibStr = getCitation("10.1109/async.2009.8", "bibtex")
 
 print(reformatBibtex(bibStr))
+
+searchTitle("formal verification of clock domain crossing using gate level models")
 
 # main()
