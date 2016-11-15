@@ -80,4 +80,27 @@ def main():
 		writeJSON(libFile, dic)
 	print(json.dumps(dic, indent=4))
 
-main()
+import urllib2
+import pybtex.database
+
+def getCitation(doi, style = "plain"):
+	url = "http://dx.doi.org/" + doi
+	styles = {
+		"bibtex" : "text/bibliography; style=bibtex",
+		"json" : "application/vnd.citationstyles.csl+json",
+		"plain" : "text/x-bibliography",
+	}
+	selStyle = styles.get(style, styles["plain"])
+	request = urllib2.Request(url, headers = {"Accept" : selStyle})
+	contents = urllib2.urlopen(request).read()
+	return contents
+
+def reformatBibtex(bibStr):
+	bib = pybtex.database.parse_string(bibStr, "bibtex")
+	return bib.to_string('bibtex')
+
+bibStr = getCitation("10.1109/async.2009.8", "bibtex")
+
+print(reformatBibtex(bibStr))
+
+# main()
