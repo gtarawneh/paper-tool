@@ -131,13 +131,19 @@ def main():
 		prompt = "There are %d missing bibtex entries, attempt to fetch [Y/n]? " % n
 		selection = _promptInput(prompt)
 		if selection.lower() in ["y", ""]:
+			changes = True
 			for entry in entriesMissingBib:
-				print "Fetching bibtex record for %s ..." % entry["DOI"]
+				sys.stdout.write("Fetching bibtex record for %s ... " % entry["DOI"])
 				bibStr = _getBibtex(entry["DOI"])
-				bibFile = "bibtex/" + entry["sha256"] + ".bib"
-				bibFileFull = getAbsolutePath(libDir, bibFile)
-				with codecs.open(bibFileFull, "w", "utf8") as f:
-					f.write(bibStr)
+				if bibStr:
+					bibFile = "bibtex/" + entry["sha256"] + ".bib"
+					bibFileFull = getAbsolutePath(libDir, bibFile)
+					with codecs.open(bibFileFull, "w", "utf8") as f:
+						f.write(bibStr)
+					print("done")
+				else:
+					print("FAILED")
+
 	if changes:
 		writeJSON(metaFile, dic)
 		print("Finished updating library")
@@ -153,8 +159,11 @@ def _getCitation(doi, style = "plain"):
 	}
 	selStyle = styles.get(style, styles["plain"])
 	request = urllib2.Request(url, headers = {"Accept" : selStyle})
-	contents = urllib2.urlopen(request).read()
-	return contents
+	try:
+		contents = urllib2.urlopen(request).read().decode("utf8")
+		return contents
+	except:
+		return None
 
 def _reformatBibtex(bibStr):
 	bib = pybtex.database.parse_string(bibStr, "bibtex")
@@ -175,8 +184,8 @@ def _getTitleDOI(title):
 	return results
 
 def _getBibtex(DOI):
-	bibStr = _getCitation(DOI, "bibtex").decode("utf8")
-	return _reformatBibtex(bibStr)
+	bibStr = _getCitation(DOI, "bibtex")
+	return _reformatBibtex(bibStr) if bibStr else None
 
 def _readTitleFile():
 	file = '/tmp/title.txt'
