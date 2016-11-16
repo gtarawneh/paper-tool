@@ -8,6 +8,7 @@ import datetime
 import subprocess
 import urllib2
 import pybtex.database
+import codecs
 from termcolor import colored, cprint
 
 def getSHA256(file):
@@ -63,14 +64,20 @@ def getLibrary():
 	libName = args[0] if args else conf["default"]
 	return conf[libName]
 
+def getListBibtexFiles(bibDir):
+	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
+	return files
+
 def main():
 	libDir = getLibrary()
 	pdfsDir = getAbsolutePath(libDir, "pdfs")
 	metaFile = getAbsolutePath(libDir, "meta/meta.json")
+	bibDir = getAbsolutePath(libDir, "bibtex")
 	args = sys.argv[1:]
 	if "-l" in args:
 		_getLibPaperTitle(metaFile)
 		return
+	bibFiles = getListBibtexFiles(bibDir)
 	fileHash = getFileHash(pdfsDir)
 	dic = readJSON(metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
@@ -106,7 +113,7 @@ def main():
 	if entriesMissingDOI:
 		n = len(entriesMissingDOI)
 		prompt = "There are %d new paper entries, search for title and DOI [Y/n]? " % n
-		selection = _getSelection(prompt, ["y", "Y", "N", "n", ""])
+		selection = _promptInput(prompt)
 		if selection.lower() in ["y", ""]:
 			for entry in entriesMissingDOI:
 				fullFile = os.path.join(pdfsDir, entry["file"])
@@ -117,6 +124,20 @@ def main():
 					entry["added"] = getDateTimeStamp()
 					changes = True
 			print("")
+	# check for missing bibtex files
+	entriesMissingBib = [entry for entry in dic if not entry.get("sha256") + ".bib" in bibFiles]
+	if entriesMissingBib:
+		n = len(entriesMissingBib)
+		prompt = "There are %d missing bibtex entries, attempt to fetch [Y/n]? " % n
+		selection = _promptInput(prompt)
+		if selection.lower() in ["y", ""]:
+			for entry in entriesMissingBib:
+				print "Fetching bibtex record for %s ..." % entry["DOI"]
+				bibStr = _getBibtex(entry["DOI"])
+				bibFile = "bibtex/" + entry["sha256"] + ".bib"
+				bibFileFull = getAbsolutePath(libDir, bibFile)
+				with codecs.open(bibFileFull, "w", "utf8") as f:
+					f.write(bibStr)
 	if changes:
 		writeJSON(metaFile, dic)
 		print("Finished updating library")
@@ -154,7 +175,7 @@ def _getTitleDOI(title):
 	return results
 
 def _getBibtex(DOI):
-	bibStr = _getCitation(DOI, "bibtex")
+	bibStr = _getCitation(DOI, "bibtex").decode("utf8")
 	return _reformatBibtex(bibStr)
 
 def _readTitleFile():
@@ -172,7 +193,7 @@ def _getLibPaperTitle(metaFile):
 	subprocess.call(['./fzTitles.sh', metaFile])
 	return _readTitleFile()
 
-def _getSelection(prompt, options):
+def _promptInput(prompt, options = ["y", "Y", "N", "n", ""]):
 	# returns None or an int in [1,10]
 	while True:
 		inp = raw_input(prompt)
@@ -197,7 +218,7 @@ def getFileDOI(pdf):
 			print("    (%s)" % DOI)
 		print("")
 		opts = ["s", "S"] + [str(x) for x in range(1, 11)]
-		selected = _getSelection('Enter number or [s]kip: ', opts)
+		selected = _promptInput('Enter number or [s]kip: ', opts)
 		if selected.lower() == "s":
 			return None
 		else:
