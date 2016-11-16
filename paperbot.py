@@ -67,6 +67,10 @@ def main():
 	libDir = getLibrary()
 	pdfsDir = getAbsolutePath(libDir, "pdfs")
 	metaFile = getAbsolutePath(libDir, "meta/meta.json")
+	args = sys.argv[1:]
+	if "-l" in args:
+		_getLibPaperTitle(metaFile)
+		return
 	fileHash = getFileHash(pdfsDir)
 	dic = readJSON(metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
@@ -162,6 +166,10 @@ def _readTitleFile():
 
 def _getPaperTitle(pdf):
 	subprocess.call(['./getTitle.sh', pdf])
+	return _readTitleFile()
+
+def _getLibPaperTitle(metaFile):
+	subprocess.call(['./fzTitles.sh', metaFile])
 	return _readTitleFile()
 
 def _getSelection(prompt, options):
