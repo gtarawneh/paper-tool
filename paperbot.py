@@ -4,6 +4,10 @@ import os
 import hashlib
 import json
 import datetime
+import subprocess
+import urllib2
+import pybtex.database
+from termcolor import colored, cprint
 
 def getSHA256(file):
 	hasher = hashlib.sha256()
@@ -76,14 +80,28 @@ def main():
 		print("file deleted: %s" % entry["file"])
 		dic.remove(entry)
 		changes = True
+	# check for missing DOIs/titles
+	entriesMissingDOI = [entry for entry in dic if not entry.get("DOI") or not entry.get("title")]
+	if entriesMissingDOI:
+		n = len(entriesMissingDOI)
+		prompt = "There are %d new paper entries, search for title and DOI [Y/n]? " % n
+		selection = _getSelection(prompt, ["y", "Y", "N", "n", ""])
+		if selection.lower() in ["y", ""]:
+			for entry in entriesMissingDOI:
+				fullFile = os.path.join(libDir, entry["file"])
+				papInfo = getFileDOI(fullFile)
+				if papInfo:
+					entry["DOI"] = papInfo["DOI"]
+					entry["title"] = papInfo["title"]
+					entry["added"] = getDateTimeStamp()
+					changes = True
 	if changes:
 		writeJSON(libFile, dic)
-	print(json.dumps(dic, indent=4))
+		print(json.dumps(dic, indent=4))
+	else:
+		print("Library up to date")
 
-import urllib2
-import pybtex.database
-
-def getCitation(doi, style = "plain"):
+def _getCitation(doi, style = "plain"):
 	url = "http://dx.doi.org/" + doi
 	styles = {
 		"bibtex" : "text/bibliography; style=bibtex",
@@ -95,23 +113,70 @@ def getCitation(doi, style = "plain"):
 	contents = urllib2.urlopen(request).read()
 	return contents
 
-def reformatBibtex(bibStr):
+def _reformatBibtex(bibStr):
 	bib = pybtex.database.parse_string(bibStr, "bibtex")
 	return bib.to_string('bibtex')
 
-def searchTitle(title):
+def _getTitleDOI(title):
 	# api doc: https://github.com/CrossRef/rest-api-doc/blob/master/rest_api.md
 	escaped = urllib2.quote(title)
-	url = "https://api.crossref.org/works?query.title=%s&rows=1" % escaped
+	url = "https://api.crossref.org/works?query.title=%s&rows=10" % escaped
 	result = urllib2.urlopen(url).read()
 	dic = json.loads(result)
+	results = []
 	for item in dic["message"]["items"]:
-		print "%s : %s" % (item["DOI"], item["title"][0])
+		results.append({
+			"DOI": item["DOI"],
+			"title": item["title"][0]
+		})
+	return results
 
-bibStr = getCitation("10.1109/async.2009.8", "bibtex")
+def _getBibtex(DOI):
+	bibStr = _getCitation(DOI, "bibtex")
+	return _reformatBibtex(bibStr)
 
-print(reformatBibtex(bibStr))
+def _readTitleFile():
+	file = '/tmp/title.txt'
+	with open(file, 'r') as f:
+		lines = f.read().strip().split('\n')
+		return (' '.join(lines) if len(lines)>1 else lines[0])
+	return None
 
-searchTitle("formal verification of clock domain crossing using gate level models")
+def _getPaperTitle(pdf):
+	subprocess.call(['./getTitle.sh', pdf])
+	return _readTitleFile()
 
-# main()
+def _getSelection(prompt, options):
+	# returns None or an int in [1,10]
+	while True:
+		inp = raw_input(prompt)
+		if inp in options:
+			return inp
+
+def getFileDOI(pdf):
+	maxLength = 80
+	title = _getPaperTitle(pdf)
+	os.system('clear')
+	print("Searching title on crossref.org ...\n")
+	results = _getTitleDOI(title)
+	if results:
+		print("Matches:\n")
+		for ind, item in enumerate(results):
+			numStr = "%2d." % (ind+1)
+			DOI = colored(item["DOI"], color='green', attrs=[])
+			title = item["title"]
+			titleShort = title[:maxLength] + (title[maxLength:] and ' ..')
+			num = colored(numStr, color='magenta')
+			print("%s %s" % (num, titleShort))
+			print("    (%s)" % DOI)
+		print("")
+		opts = ["s", "S"] + [str(x) for x in range(1, 11)]
+		selected = _getSelection('Enter number or [s]kip: ', opts)
+		if selected.lower() == "s":
+			return None
+		else:
+			return results[int(selected)-1]
+	else:
+		print("no results were found")
+
+main()
