@@ -1,5 +1,6 @@
 #!/bin/python
 
+import sys
 import os
 import hashlib
 import json
@@ -16,8 +17,8 @@ def getSHA256(file):
 		hasher.update(buf)
 	return hasher.hexdigest()
 
-def getAbsolutePath(libDir, file):
-	return os.path.join(libDir, file)
+def getAbsolutePath(dir, file):
+	return os.path.join(dir, file)
 
 def writeJSON(file, d):
 	# writes dictionary d to file
@@ -46,18 +47,34 @@ def getFileHash(libDir):
 			dic[relFile] = getSHA256(fullFile)
 	return dic
 
-def main():
+def loadJSON(file):
+	try:
+		with open(file) as f:
+			return json.load(f)
+	except ValueError as e:
+		print(e)
+		raise Exception('Error encountered while parsing %s' % file)
+
+def getLibrary():
 	homeDir = os.getenv("HOME")
-	libDir = getAbsolutePath(homeDir, "pdfs")
-	libFile = getAbsolutePath(homeDir, "pdfs.json")
-	fileHash = getFileHash(libDir)
-	dic = readJSON(libFile)
+	args = sys.argv[1:]
+	configFile = getAbsolutePath(homeDir, ".papertool")
+	conf = loadJSON(configFile)
+	libName = args[0] if args else conf["default"]
+	return conf[libName]
+
+def main():
+	libDir = getLibrary()
+	pdfsDir = getAbsolutePath(libDir, "pdfs")
+	metaFile = getAbsolutePath(libDir, "meta/meta.json")
+	fileHash = getFileHash(pdfsDir)
+	dic = readJSON(metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
 	changes = False
 	# first, loop through files in the lib directory
 	fileList = []
 	for relFile, fileHash in fileHash.iteritems():
-		fullFile = os.path.join(libDir, relFile)
+		fullFile = os.path.join(pdfsDir, relFile)
 		fileList.append(relFile)
 		existingEntry = hmap.get(fileHash, None)
 		if existingEntry:
@@ -88,16 +105,17 @@ def main():
 		selection = _getSelection(prompt, ["y", "Y", "N", "n", ""])
 		if selection.lower() in ["y", ""]:
 			for entry in entriesMissingDOI:
-				fullFile = os.path.join(libDir, entry["file"])
+				fullFile = os.path.join(pdfsDir, entry["file"])
 				papInfo = getFileDOI(fullFile)
 				if papInfo:
 					entry["DOI"] = papInfo["DOI"]
 					entry["title"] = papInfo["title"]
 					entry["added"] = getDateTimeStamp()
 					changes = True
+			print("")
 	if changes:
-		writeJSON(libFile, dic)
-		print(json.dumps(dic, indent=4))
+		writeJSON(metaFile, dic)
+		print("Finished updating library")
 	else:
 		print("Library up to date")
 
