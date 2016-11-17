@@ -74,7 +74,8 @@ def main():
 		libDir = args[2]
 		walker.buildLibrary(textDir, libDir)
 		return
-	libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
+	libName = args[0] if args else options["default"]
+	libDir = options[libName] + "/sentences"
 	if libDir:
 		if checkLibrary(libDir):
 			startConsole(libDir)
