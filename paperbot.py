@@ -18,8 +18,8 @@ def getSHA256(file):
 		hasher.update(buf)
 	return hasher.hexdigest()
 
-def getAbsolutePath(dir, file):
-	return os.path.join(dir, file)
+def getAbsolutePath(directory, file):
+	return os.path.join(directory, file)
 
 def writeJSON(file, d):
 	# writes dictionary d to file
@@ -194,12 +194,20 @@ def _readTitleFile():
 		return (' '.join(lines) if len(lines)>1 else lines[0])
 	return None
 
+def getLocalPath():
+	# returns path of python script
+    return os.path.dirname(os.path.realpath(sys.argv[0]))
+
 def _getPaperTitle(pdf):
-	subprocess.call(['./getTitle.sh', pdf])
+	script = "getTitle.sh"
+	scriptPath = getAbsolutePath(getLocalPath(), script)
+	subprocess.call([scriptPath, pdf])
 	return _readTitleFile()
 
 def _getLibPaperTitle(metaFile):
-	subprocess.call(['./fzTitles.sh', metaFile])
+	script = "fzTitles.sh"
+	scriptPath = getAbsolutePath(getLocalPath(), script)
+	subprocess.call([scriptPath, metaFile])
 	return _readTitleFile()
 
 def _promptInput(prompt, options = ["y", "Y", "N", "n", ""]):

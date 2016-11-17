@@ -76,10 +76,9 @@ def main():
 		return
 	libName = args[0] if args else options["default"]
 	libDir = options[libName] + "/sentences"
-	if libDir:
-		if checkLibrary(libDir):
-			startConsole(libDir)
-		return
+	if libDir and checkLibrary(libDir):
+		startConsole(libDir)
+	return
 	# otherwise, unable to process command line arguments so:
 	printUsage()
 
