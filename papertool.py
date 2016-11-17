@@ -69,13 +69,11 @@ def main():
 	options = loadOptions()
 	args = sys.argv[1:]
 	nargs = len(args)
-	if nargs>0:
-		if args[0] == 'build':
-			if nargs>2:
-				textDir = args[1]
-				libDir = args[2]
-				walker.buildLibrary(textDir, libDir)
-				return
+	if (nargs>2) and (args[0] == 'build'):
+		textDir = args[1]
+		libDir = args[2]
+		walker.buildLibrary(textDir, libDir)
+		return
 	libDir = args[0] if nargs==1 else options.get("library", "").encode("ascii")
 	if libDir:
 		if checkLibrary(libDir):
