@@ -20,7 +20,7 @@ def loadJSON(file):
 			return json.load(f)
 	except ValueError as e:
 		print(e)
-		raise Exception('Error encountered while parsing .papertool')
+		raise Exception('Error encountered while parsing %s' % file)
 
 def loadLibrary(libDir):
 	with open(getAbsolutePath(libDir, senFile)) as f:

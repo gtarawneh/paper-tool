@@ -143,7 +143,25 @@ def main():
 					print("done")
 				else:
 					print("FAILED")
-
+	# check for missing text files
+	entriesMissingText = []
+	for entry in dic:
+		tFile = entry["file"].replace(".pdf", ".txt")
+		tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+		if not os.path.isfile(tFileFull):
+			entriesMissingText.append(entry)
+	if entriesMissingText:
+		n = len(entriesMissingText)
+		prompt = "There are %d new paper pdfs, extract text [Y/n]? " % n
+		selection = _promptInput(prompt)
+		if selection.lower() in ["y", ""]:
+			for entry in entriesMissingText:
+				pFile = entry["file"]
+				tFile = entry["file"].replace(".pdf", ".txt")
+				pFileFull = getAbsolutePath(libDir, "pdfs/" + pFile)
+				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+				print "Extracting text from %s ... " % pFile
+				convertPDF(pFileFull, tFileFull)
 	if changes:
 		writeJSON(metaFile, dic)
 		print("Finished updating library")
@@ -203,6 +221,11 @@ def _getPaperTitle(pdf):
 	scriptPath = getAbsolutePath(getLocalPath(), script)
 	subprocess.call([scriptPath, pdf])
 	return _readTitleFile()
+
+def convertPDF(pdfFile, textFile):
+	script = "pdf2text.sh"
+	scriptPath = getAbsolutePath(getLocalPath(), script)
+	subprocess.call([scriptPath, pdfFile, textFile])
 
 def _getLibPaperTitle(metaFile):
 	script = "fzTitles.sh"
