@@ -68,11 +68,18 @@ def getListBibtexFiles(bibDir):
 	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
 	return files
 
+def getTextFile(entry):
+	# returns text file given a dictionary `entry` containing a pdf filename
+	tFile = entry["file"].replace(".pdf", ".txt")
+	return tFile
+
 def main():
 	libDir = getLibrary()
 	pdfsDir = getAbsolutePath(libDir, "pdfs")
 	metaFile = getAbsolutePath(libDir, "meta/meta.json")
 	bibDir = getAbsolutePath(libDir, "bibtex")
+	textDir = getAbsolutePath(libDir, "text")
+	senDir = getAbsolutePath(libDir, "sentences")
 	args = sys.argv[1:]
 	if "-l" in args:
 		_getLibPaperTitle(metaFile)
@@ -147,8 +154,8 @@ def main():
 	rebuildSentences = False
 	entriesMissingText = []
 	for entry in dic:
-		tFile = entry["file"].replace(".pdf", ".txt")
-		tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+		tFile = getTextFile(entry)
+		tFileFull = getAbsolutePath(textDir, tFile)
 		if not os.path.isfile(tFileFull):
 			entriesMissingText.append(entry)
 	if entriesMissingText:
@@ -156,11 +163,12 @@ def main():
 		prompt = "There are %d new paper pdfs, extract text [Y/n]? " % n
 		selection = _promptInput(prompt)
 		if selection.lower() in ["y", ""]:
+			changes = True
 			for entry in entriesMissingText:
 				pFile = entry["file"]
-				tFile = entry["file"].replace(".pdf", ".txt")
-				pFileFull = getAbsolutePath(libDir, "pdfs/" + pFile)
-				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+				tFile = getTextFile(entry)
+				pFileFull = getAbsolutePath(pdfsDir, pFile)
+				tFileFull = getAbsolutePath(textDir, tFile)
 				print "Extracting text from %s ... " % pFile
 				convertPDF(pFileFull, tFileFull)
 			rebuildSentences = True
@@ -169,12 +177,12 @@ def main():
 		print "Updating sentence files ..."
 		sFile = "sentences.txt"
 		iFile = "index.json"
-		sFileFull = getAbsolutePath(libDir, "sentences/" + sFile)
-		iFileFull = getAbsolutePath(libDir, "sentences/" + iFile)
+		sFileFull = getAbsolutePath(senDir, sFile)
+		iFileFull = getAbsolutePath(senDir, iFile)
 		indices = []
 		with open(sFileFull, "w") as f1:
 			for index, entry in enumerate(dic):
-				tFile = entry["file"].replace(".pdf", ".txt")
+				tFile = getTextFile(entry)
 				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
 				with open(tFileFull, "r") as f2:
 					content = f2.read()
