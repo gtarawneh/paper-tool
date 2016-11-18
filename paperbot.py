@@ -144,6 +144,7 @@ def main():
 				else:
 					print("FAILED")
 	# check for missing text files
+	rebuildSentences = False
 	entriesMissingText = []
 	for entry in dic:
 		tFile = entry["file"].replace(".pdf", ".txt")
@@ -162,6 +163,25 @@ def main():
 				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
 				print "Extracting text from %s ... " % pFile
 				convertPDF(pFileFull, tFileFull)
+			rebuildSentences = True
+	# rebuild sentences
+	if rebuildSentences:
+		print "Updating sentence files ..."
+		sFile = "sentences.txt"
+		iFile = "index.json"
+		sFileFull = getAbsolutePath(libDir, "sentences/" + sFile)
+		iFileFull = getAbsolutePath(libDir, "sentences/" + iFile)
+		indices = []
+		with open(sFileFull, "w") as f1:
+			for index, entry in enumerate(dic):
+				tFile = entry["file"].replace(".pdf", ".txt")
+				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+				with open(tFileFull, "r") as f2:
+					content = f2.read()
+					lines = content.count("\n")
+					indices += [index] * lines
+					f1.write(content)
+		writeJSON(iFileFull, indices)
 	if changes:
 		writeJSON(metaFile, dic)
 		print("Finished updating library")
