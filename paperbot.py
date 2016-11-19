@@ -147,6 +147,8 @@ def main():
 					bibFileFull = getAbsolutePath(libDir, bibFile)
 					with codecs.open(bibFileFull, "w", "utf8") as f:
 						f.write(bibStr)
+					bibInfo = _parseBibtex(bibStr)
+					entry.update(bibInfo)
 					print("done")
 				else:
 					print("FAILED")
@@ -210,6 +212,23 @@ def _getCitation(doi, style = "plain"):
 		return contents
 	except:
 		return None
+
+def _parseBibtex(bibStr):
+	bib = pybtex.database.parse_string(bibStr, "bibtex")
+	key1 = bib.entries.keys()[0]
+	entry = bib.entries[key1].fields
+	authorList = []
+	for p in bib.entries[key1].persons["author"]:
+		authorList.append(unicode(p))
+	fields = {
+		"journal" : entry.get("journal"),
+		"year" : entry.get("year"),
+		"url" : entry.get("url"),
+		"authors" : " and ".join(authorList)
+	}
+	# create and return dict with None values removed
+	result = dict((k, v) for k, v in fields.iteritems() if v)
+	return result
 
 def _reformatBibtex(bibStr):
 	bib = pybtex.database.parse_string(bibStr, "bibtex")
