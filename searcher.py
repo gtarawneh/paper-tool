@@ -86,6 +86,9 @@ class Searcher:
 		return (sug, infoStr)
 
 	def _getInfoStr(self, info):
+		return "(%s)" % info["title"]
+
+	def _getInfoStr_old(self, info):
 		if info and 'message' in info:
 			item0 = info['message']['items'][0]
 			title = ''.join(item0['title'])

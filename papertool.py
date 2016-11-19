@@ -9,9 +9,9 @@ import json
 import console
 import walker
 
-senFile = 'sentences.txt'
-infoFile = 'paper-crossref.json'
-indexFile = 'index.json'
+senFile = 'sentences/sentences.txt'
+infoFile = 'meta/meta.json'
+indexFile = 'sentences/index.json'
 optionsfile = '.papertool'
 
 def loadJSON(file):
@@ -75,7 +75,7 @@ def main():
 		walker.buildLibrary(textDir, libDir)
 		return
 	libName = args[0] if args else options["default"]
-	libDir = options[libName] + "/sentences"
+	libDir = options[libName]
 	if libDir and checkLibrary(libDir):
 		startConsole(libDir)
 	return
