@@ -264,18 +264,18 @@ def getLocalPath():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
 
 def _getPaperTitle(pdf):
-	script = "getTitle.sh"
+	script = "shell/getTitle.sh"
 	scriptPath = getAbsolutePath(getLocalPath(), script)
 	subprocess.call([scriptPath, pdf])
 	return _readTitleFile()
 
 def convertPDF(pdfFile, textFile):
-	script = "pdf2text.sh"
+	script = "shell/pdf2text.sh"
 	scriptPath = getAbsolutePath(getLocalPath(), script)
 	subprocess.call([scriptPath, pdfFile, textFile])
 
 def _getLibPaperTitle(metaFile):
-	script = "fzTitles.sh"
+	script = "shell/fzTitles.sh"
 	scriptPath = getAbsolutePath(getLocalPath(), script)
 	subprocess.call([scriptPath, metaFile])
 	return _readTitleFile()
