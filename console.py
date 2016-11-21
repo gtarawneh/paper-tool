@@ -115,12 +115,12 @@ class Console:
 		if url != None:
 			self.runProcess(['chrome', url])
 
-	def displayPDF(self, file):
-		self.runProcess(['evince', '-f', file])
+	def displayPDF(self, file, workDir):
+		self.runProcess(['evince', '-f', file], workDir)
 
-	def runProcess(self, p):
+	def runProcess(self, p, workDir = None):
 		FNULL = open(os.devnull, 'w')
-		subprocess.Popen(p, stderr = FNULL)
+		subprocess.Popen(p, stderr = FNULL, cwd = workDir)
 
 	def writeQueryLine(self):
 		queryLine = self.H - 1
@@ -236,8 +236,8 @@ class Console:
 			elif c == 16:
 				# ctrl-p
 				file = self.searcher.getFile(self.selected)
-				fileFull = self.getAbsolutePath(self.libDir, file)
-				self.displayPDF(fileFull)
+				pdfDir = self.getAbsolutePath(self.libDir, "pdfs")
+				self.displayPDF(file, pdfDir)
 			elif c == 21:
 				# ctrl-u
 				self.query = ''
