@@ -22,11 +22,18 @@ def loadJSON(file):
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
 
-def loadLibrary(libDir):
+def loadLibraryContent(libDir):
 	with open(getAbsolutePath(libDir, senFile)) as f:
 		content = f.read().splitlines()
 	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
 	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
+	return (content, indexList, infoList)
+
+def loadLibraryTitles(libDir):
+	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
+	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
+	content = [entry["title"] for entry in infoList]
+	indexList = range(len(infoList))
 	return (content, indexList, infoList)
 
 def getAbsolutePath(libDir, file):
@@ -74,10 +81,14 @@ def main():
 		libDir = args[2]
 		walker.buildLibrary(textDir, libDir)
 		return
-	libName = args[0] if args else options["default"]
+	if (nargs>0) and args[0] == "-t":
+		mode = "titles"
+	else:
+		mode = "content"
+	libName = args[0] if (args and args[0][0]!="-") else options["default"]
 	libDir = options[libName]
 	if libDir and checkLibrary(libDir):
-		startConsole(libDir)
+		startConsole(libDir, mode)
 	return
 	# otherwise, unable to process command line arguments so:
 	printUsage()
@@ -98,8 +109,11 @@ def checkLibrary(libDir):
 			return False
 	return True
 
-def startConsole(libDir):
-	content, indexList, infoList =  loadLibrary(libDir)
+def startConsole(libDir, mode = "content"):
+	if mode == "content":
+		content, indexList, infoList =  loadLibraryContent(libDir)
+	else:
+		content, indexList, infoList =  loadLibraryTitles(libDir)
 	searcher = console.Searcher(content, indexList, infoList)
 	getSuggestionFunc = getSuggestions
 	try:
