@@ -76,11 +76,6 @@ def main():
 	options = loadOptions()
 	args = sys.argv[1:]
 	nargs = len(args)
-	if (nargs>2) and (args[0] == 'build'):
-		textDir = args[1]
-		libDir = args[2]
-		walker.buildLibrary(textDir, libDir)
-		return
 	if (nargs>0) and args[0] == "-t":
 		mode = "titles"
 	else:
