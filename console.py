@@ -17,9 +17,11 @@ class Console:
 	prompt = '> ' # query line prompt
 	digits = [] # buffer to hold digit key presses
 	sentenceModeCache = None # tuple to backup sentence mode details
+	libDir = ''
 
-	def __init__(self, searcher):
+	def __init__(self, searcher, libDir):
 		self.searcher = searcher
+		self.libDir = libDir
 		# init curses screen
 		self.scr = curses.initscr()
 		curses.start_color()
@@ -234,7 +236,8 @@ class Console:
 			elif c == 16:
 				# ctrl-p
 				file = self.searcher.getFile(self.selected)
-				self.displayPDF(file)
+				fileFull = self.getAbsolutePath(self.libDir, file)
+				self.displayPDF(fileFull)
 			elif c == 21:
 				# ctrl-u
 				self.query = ''
@@ -299,3 +302,6 @@ class Console:
 		sugCount = len(self.searcher.suggestions)
 		sugLineCount = len(self.suggestionLines)
 		return math.ceil(float(sugCount) / sugLineCount)
+
+	def getAbsolutePath(self, libDir, file):
+		return os.path.join(libDir, file)

@@ -103,7 +103,7 @@ def startConsole(libDir):
 	searcher = console.Searcher(content, indexList, infoList)
 	getSuggestionFunc = getSuggestions
 	try:
-		con1 = console.Console(searcher)
+		con1 = console.Console(searcher, libDir)
 		con1.loopConsole()
 	except Exception as err:
 		con1.deinit()

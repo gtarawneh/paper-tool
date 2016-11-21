@@ -124,7 +124,7 @@ class Searcher:
 
 	def getFile(self, ind):
 		info = self._getSentenceInfo(ind)
-		return info['_file']
+		return info['file']
 
 	def getSuggestionCount(self):
 		return len(self.suggestions)
