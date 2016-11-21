@@ -5,9 +5,19 @@ import sys
 import traceback
 import math
 import json
-
 import console
 import walker
+from docopt import docopt
+
+usage = """Papertool
+
+Usage:
+  papertool.py [-t | --title] [--lib=<lib>]
+
+Options:
+  -t --title    Search paper titles
+
+"""
 
 senFile = 'sentences/sentences.txt'
 infoFile = 'meta/meta.json'
@@ -60,38 +70,21 @@ def loadOptions():
 	else:
 		return {}
 
-def printUsage():
-	usage = [
-		'papertool',
-		'',
-		'Usage:',
-		'  papertool.py <libDir>',
-		'  papertool.py build <textDir> <libDir>',
-		'',
-	]
-	for line in usage:
-		print(line)
-
 def main():
 	options = loadOptions()
-	args = sys.argv[1:]
-	nargs = len(args)
-	if (nargs>0) and args[0] == "-t":
-		mode = "titles"
-	else:
-		mode = "content"
-	libName = args[0] if (args and args[0][0]!="-") else options["default"]
-	libDir = options[libName]
+	args = docopt(usage, version="Papertool 0.1")
+	mode = "titles" if args["--title"] else "content"
+	libName = args["--lib"] if args["--lib"] else options["default"]
+	libDir = options.get(libName)
 	if libDir and checkLibrary(libDir):
 		startConsole(libDir, mode)
-	return
-	# otherwise, unable to process command line arguments so:
-	printUsage()
+	else:
+		print "Cannot find library %s" % libName
 
 def checkLibrary(libDir):
 	# returns true when libDir and necessary files exist, False otherwise
 	if not os.path.exists(libDir):
-		print('library \'%s\' does not exist' % libDir)
+		print('directory \'%s\' does not exist' % libDir)
 		return False
 	libFiles = [
 		os.path.join(libDir, senFile),
