@@ -241,6 +241,16 @@ class Console:
 				file = self.searcher.getFile(self.selected)
 				pdfDir = self.getAbsolutePath(self.libDir, "pdfs")
 				self.displayPDF(file, pdfDir)
+			elif c == 2:
+				# ctrl-b
+				papInd = self.searcher.getPaperIndex(self.selected)
+				info = self.searcher.infoList[papInd]
+				bibDir = self.getAbsolutePath(self.libDir, "bibtex")
+				bibFile = self.getAbsolutePath(bibDir, info["sha256"] + ".bib")
+				with open(bibFile, 'r') as f:
+					bibStr = f.read()
+				with open('/dev/clipboard', 'w') as f:
+					f.write(bibStr)
 			elif c == 21:
 				# ctrl-u
 				self.query = ''
