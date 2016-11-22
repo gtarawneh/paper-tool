@@ -239,7 +239,7 @@ class Console:
 			elif c == 16:
 				# ctrl-p
 				papInd = self.searcher.getPaperIndex(self.selected)
-				file = self.searcher.getFile(papInd)
+				file = self.searcher.getFile(self.selected)
 				pdfDir = self.getAbsolutePath(self.libDir, "pdfs")
 				self.displayPDF(file, pdfDir)
 			elif c == 2:
