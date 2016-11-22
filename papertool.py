@@ -6,7 +6,6 @@ import traceback
 import math
 import json
 import console
-import walker
 from docopt import docopt
 
 usage = """Papertool
