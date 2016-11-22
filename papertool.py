@@ -6,15 +6,18 @@ import traceback
 import math
 import json
 import console
+from paperbot import updateLibrary
 from docopt import docopt
 
 usage = """Papertool
 
 Usage:
-  papertool.py [-t | --title] [--lib=<lib>]
+  papertool [--lib=<lib>]
+  papertool titles [--lib=<lib>]
+  papertool update [--lib=<lib>]
 
 Options:
-  -t --title    Search paper titles
+  --lib=<lib>    Specify library to use
 
 """
 
@@ -72,10 +75,12 @@ def loadOptions():
 def main():
 	options = loadOptions()
 	args = docopt(usage, version="Papertool 0.1")
-	mode = "titles" if args["--title"] else "content"
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
-	if libDir and checkLibrary(libDir):
+	if args["update"]:
+		updateLibrary(libDir)
+	elif libDir and checkLibrary(libDir):
+		mode = "titles" if args["titles"] else "content"
 		startConsole(libDir, mode)
 	else:
 		print "Cannot find library %s" % libName

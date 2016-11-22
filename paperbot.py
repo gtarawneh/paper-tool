@@ -56,14 +56,6 @@ def loadJSON(file):
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
 
-def getLibrary():
-	homeDir = os.getenv("HOME")
-	args = sys.argv[1:]
-	configFile = getAbsolutePath(homeDir, ".papertool")
-	conf = loadJSON(configFile)
-	libName = args[0] if args else conf["default"]
-	return conf[libName]
-
 def getListBibtexFiles(bibDir):
 	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
 	return files
@@ -73,8 +65,7 @@ def getTextFile(entry):
 	tFile = entry["file"].replace(".pdf", ".txt")
 	return tFile
 
-def main():
-	libDir = getLibrary()
+def updateLibrary(libDir):
 	pdfsDir = getAbsolutePath(libDir, "pdfs")
 	metaFile = getAbsolutePath(libDir, "meta/meta.json")
 	bibDir = getAbsolutePath(libDir, "bibtex")
@@ -312,5 +303,3 @@ def getFileDOI(pdf):
 			return results[int(selected)-1]
 	else:
 		print("no results were found")
-
-main()
