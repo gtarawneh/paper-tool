@@ -116,11 +116,7 @@ class Searcher:
 
 	def getURL(self, ind):
 		info = self._getSentenceInfo(ind)
-		if 'message' in info:
-			item0 = info['message']['items'][0]
-			return item0['URL']
-		else:
-			return None
+		return info.get("url")
 
 	def getFile(self, ind):
 		info = self._getSentenceInfo(ind)
