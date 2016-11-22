@@ -116,7 +116,10 @@ class Console:
 			self.runProcess(['chrome', url])
 
 	def displayPDF(self, file, workDir):
-		self.runProcess(['evince', '-f', file], workDir)
+		acro = '/cygdrive/c/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32'
+		args = ['/s', '/A', 'toolbar=0&navpanes=0', file]
+		self.runProcess([acro] + args, workDir)
+		# self.runProcess(['evince', '-f', file], workDir)
 
 	def runProcess(self, p, workDir = None):
 		FNULL = open(os.devnull, 'w')
