@@ -238,7 +238,8 @@ class Console:
 				self.displayWebPage(url)
 			elif c == 16:
 				# ctrl-p
-				file = self.searcher.getFile(self.selected)
+				papInd = self.searcher.getPaperIndex(self.selected)
+				file = self.searcher.getFile(papInd)
 				pdfDir = self.getAbsolutePath(self.libDir, "pdfs")
 				self.displayPDF(file, pdfDir)
 			elif c == 2:
