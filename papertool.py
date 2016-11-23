@@ -6,7 +6,7 @@ import traceback
 import math
 import json
 import console
-from paperbot import updateLibrary
+from paperbot import updateLibrary, writeJSON
 from docopt import docopt
 
 usage = """Papertool
@@ -15,6 +15,7 @@ Usage:
   papertool [--lib=<lib>]
   papertool titles [--lib=<lib>]
   papertool update [--lib=<lib>]
+  papertool create <lib> <libdir>
 
 Options:
   --lib=<lib>    Specify library to use
@@ -72,9 +73,35 @@ def loadOptions():
 	else:
 		return {}
 
+def createLib(libName, parentDir):
+	libDir = getAbsolutePath(parentDir, libName)
+	metaDir = getAbsolutePath(libDir, "meta")
+	textDir = getAbsolutePath(libDir, "text")
+	senDir = getAbsolutePath(libDir, "sentences")
+	pdfDir = getAbsolutePath(libDir, "pdfs")
+	bibDir = getAbsolutePath(libDir, "bibtex")
+	# create sub-directories
+	for subdir in [metaDir, textDir, senDir, pdfDir, bibDir]:
+		try:
+			os.makedirs(subdir)
+		except:
+			pass
+	# create empty files
+	metaFile = getAbsolutePath(metaDir, "meta.json")
+	indexFile = getAbsolutePath(senDir, "index.json")
+	senFile = getAbsolutePath(senDir, "sentences.txt")
+	writeJSON(metaFile, [])
+	writeJSON(indexFile, [])
+	with open(senFile, "w") as f:
+		pass
+
 def main():
 	options = loadOptions()
 	args = docopt(usage, version="Papertool 0.1")
+	if args["create"]:
+		createLib(args["<lib>"], args["<libdir>"])
+		print "Library <%s> created successfully" % args["<lib>"]
+		return
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
 	if args["update"]:
