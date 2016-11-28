@@ -275,10 +275,14 @@ def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
 	if autoYes:
 		return "y"
 	else:
-		while True:
-			inp = raw_input(prompt)
-			if inp in options:
-				return inp
+		try:
+			while True:
+				inp = raw_input(prompt)
+				if inp in options:
+					return inp
+		except KeyboardInterrupt:
+			print ""
+			sys.exit(1)
 
 def getFileDOI(pdf):
 	maxLength = 80
