@@ -14,11 +14,12 @@ usage = """Papertool
 Usage:
   papertool [--lib=<lib>]
   papertool titles [--lib=<lib>]
-  papertool update [--lib=<lib>]
+  papertool update [--yes] [--lib=<lib>]
   papertool create <lib> <libdir>
 
 Options:
   --lib=<lib>    Specify library to use
+  -y --yes       Automatic yes to prompts
 
 """
 
@@ -105,7 +106,7 @@ def main():
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
 	if args["update"]:
-		updateLibrary(libDir)
+		updateLibrary(libDir, args["--yes"])
 	elif libDir and checkLibrary(libDir):
 		mode = "titles" if args["titles"] else "content"
 		startConsole(libDir, mode)

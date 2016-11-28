@@ -65,7 +65,7 @@ def getTextFile(entry):
 	tFile = entry["file"].replace(".pdf", ".txt")
 	return tFile
 
-def updateLibrary(libDir):
+def updateLibrary(libDir, autoYes = False):
 	pdfsDir = getAbsolutePath(libDir, "pdfs")
 	metaFile = getAbsolutePath(libDir, "meta/meta.json")
 	bibDir = getAbsolutePath(libDir, "bibtex")
@@ -111,7 +111,7 @@ def updateLibrary(libDir):
 	if entriesMissingDOI:
 		n = len(entriesMissingDOI)
 		prompt = "There are %d new paper entries, search for title and DOI [Y/n]? " % n
-		selection = _promptInput(prompt)
+		selection = _promptInput(prompt, autoYes=autoYes)
 		if selection.lower() in ["y", ""]:
 			for entry in entriesMissingDOI:
 				fullFile = os.path.join(pdfsDir, entry["file"])
@@ -127,7 +127,7 @@ def updateLibrary(libDir):
 	if entriesMissingBib:
 		n = len(entriesMissingBib)
 		prompt = "There are %d missing bibtex entries, attempt to fetch [Y/n]? " % n
-		selection = _promptInput(prompt)
+		selection = _promptInput(prompt, autoYes=autoYes)
 		if selection.lower() in ["y", ""]:
 			changes = True
 			for entry in entriesMissingBib:
@@ -154,7 +154,7 @@ def updateLibrary(libDir):
 	if entriesMissingText:
 		n = len(entriesMissingText)
 		prompt = "There are %d new paper pdfs, extract text [Y/n]? " % n
-		selection = _promptInput(prompt)
+		selection = _promptInput(prompt, autoYes=autoYes)
 		if selection.lower() in ["y", ""]:
 			changes = True
 			for entry in entriesMissingText:
@@ -271,12 +271,14 @@ def _getLibPaperTitle(metaFile):
 	subprocess.call([scriptPath, metaFile])
 	return _readTitleFile()
 
-def _promptInput(prompt, options = ["y", "Y", "N", "n", ""]):
-	# returns None or an int in [1,10]
-	while True:
-		inp = raw_input(prompt)
-		if inp in options:
-			return inp
+def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
+	if autoYes:
+		return "y"
+	else:
+		while True:
+			inp = raw_input(prompt)
+			if inp in options:
+				return inp
 
 def getFileDOI(pdf):
 	maxLength = 80
