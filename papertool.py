@@ -13,7 +13,7 @@ usage = """Papertool
 
 Usage:
   papertool [--lib=<lib>]
-  papertool titles [--lib=<lib>]
+  papertool text [--lib=<lib>]
   papertool update [--yes] [--lib=<lib>]
   papertool create <lib> <libdir>
 
@@ -108,7 +108,7 @@ def main():
 	if args["update"]:
 		updateLibrary(libDir, args["--yes"])
 	elif libDir and checkLibrary(libDir):
-		mode = "titles" if args["titles"] else "content"
+		mode = "content" if args["text"] else "titles"
 		startConsole(libDir, mode)
 	else:
 		print "Cannot find library %s" % libName
