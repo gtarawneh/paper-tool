@@ -86,7 +86,7 @@ class Searcher:
 		return (sug, infoStr)
 
 	def _getInfoStr(self, info):
-		return "(%s)" % info["title"]
+		return "(%s)" % info.get("title", "(unidentified paper)")
 
 	def _getInfoStr_old(self, info):
 		if info and 'message' in info:

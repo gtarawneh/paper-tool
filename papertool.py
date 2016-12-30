@@ -46,7 +46,7 @@ def loadLibraryContent(libDir):
 def loadLibraryTitles(libDir):
 	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
 	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
-	content = [entry["title"] for entry in infoList]
+	content = [entry.get("title", "(unidentifier paper)") for entry in infoList]
 	indexList = range(len(infoList))
 	return (content, indexList, infoList)
 
