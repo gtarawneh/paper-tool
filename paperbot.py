@@ -120,6 +120,7 @@ def updateLibrary(libDir, autoYes = False):
 					entry["DOI"] = papInfo["DOI"]
 					entry["title"] = papInfo["title"]
 					entry["added"] = getDateTimeStamp()
+					writeJSON(metaFile, dic)
 					changes = True
 			print("")
 	# check for missing bibtex files
@@ -140,6 +141,7 @@ def updateLibrary(libDir, autoYes = False):
 						f.write(bibStr)
 					bibInfo = _parseBibtex(bibStr)
 					entry.update(bibInfo)
+					writeJSON(metaFile, dic)
 					print("done")
 				else:
 					print("FAILED")
@@ -183,8 +185,8 @@ def updateLibrary(libDir, autoYes = False):
 					indices += [index] * lines
 					f1.write(content)
 		writeJSON(iFileFull, indices)
-	if changes:
 		writeJSON(metaFile, dic)
+	if changes:
 		print("Finished updating library")
 	else:
 		print("Library up to date")
