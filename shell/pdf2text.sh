@@ -20,4 +20,4 @@ pdftotext -q "$pdfFile" - \
 | sed -r "/^([^\r\n\t\f ]+[ ]+){5,}.+$/!d" \
 | sed -r "/[^a-zA-Z]{2}/d" \
 | sed -r "/^[a-z]/d" \
-> $textFile
+> "$textFile"

@@ -258,19 +258,16 @@ def getLocalPath():
 
 def _getPaperTitle(pdf):
 	script = "shell/getTitle.sh"
-	scriptPath = getAbsolutePath(getLocalPath(), script)
-	subprocess.call([scriptPath, pdf])
+	subprocess.call([script, pdf], cwd=getLocalPath())
 	return _readTitleFile()
 
 def convertPDF(pdfFile, textFile):
 	script = "shell/pdf2text.sh"
-	scriptPath = getAbsolutePath(getLocalPath(), script)
-	subprocess.call([scriptPath, pdfFile, textFile])
+	subprocess.call([script, pdfFile, textFile], cwd=getLocalPath())
 
 def _getLibPaperTitle(metaFile):
 	script = "shell/fzTitles.sh"
-	scriptPath = getAbsolutePath(getLocalPath(), script)
-	subprocess.call([scriptPath, metaFile])
+	subprocess.call([scriptPath, metaFile], cwd=getLocalPath())
 	return _readTitleFile()
 
 def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
