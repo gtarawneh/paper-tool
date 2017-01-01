@@ -3,6 +3,7 @@
 import os
 import sys
 import traceback
+import urllib2
 import math
 import json
 import console
@@ -106,7 +107,12 @@ def main():
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
 	if args["update"]:
-		updateLibrary(libDir, args["--yes"])
+		try:
+			updateLibrary(libDir, args["--yes"])
+		except urllib2.HTTPError as e:
+			print "http error, library update aborted"
+			print "code: %d" % e.code
+			print "reason: %s" % e.reason
 	elif libDir and checkLibrary(libDir):
 		mode = "content" if args["text"] else "titles"
 		startConsole(libDir, mode)

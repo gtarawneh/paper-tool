@@ -124,7 +124,9 @@ def updateLibrary(libDir, autoYes = False):
 					changes = True
 			print("")
 	# check for missing bibtex files
-	entriesMissingBib = [entry for entry in dic if not entry.get("sha256") + ".bib" in bibFiles]
+	hasDOI = lambda entry : "DOI" in entry
+	hasBib = lambda entry : entry.get("sha256") + ".bib" in bibFiles
+	entriesMissingBib = [entry for entry in dic if hasDOI(entry) and not hasBib(entry)]
 	if entriesMissingBib:
 		n = len(entriesMissingBib)
 		prompt = "There are %d missing bibtex entries, attempt to fetch [Y/n]? " % n
