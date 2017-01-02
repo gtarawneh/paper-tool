@@ -86,7 +86,21 @@ class Searcher:
 		return (sug, infoStr)
 
 	def _getInfoStr(self, info):
-		return "(%s)" % info.get("title", "(unidentified paper)")
+		title = info.get("title")
+		author1 = info.get("authors", [None])[0]
+		if author1:
+			surname = author1.split(",")[0]
+			multiple_authors = len(info.get("authors", [])) > 1
+			author_list = surname + " et al." if multiple_authors else surname
+		else:
+			author_list = None
+		year = info.get("year")
+		if author_list and year:
+			return "(%s %s)" % (surname, year)
+		elif author_list:
+			return "(%s)" % author_list
+		else:
+			return "(n/a)"
 
 	def _getInfoStr_old(self, info):
 		if info and 'message' in info:

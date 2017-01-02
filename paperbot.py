@@ -208,14 +208,12 @@ def _parseBibtex(bibStr):
 	bib = pybtex.database.parse_string(bibStr, "bibtex")
 	key1 = bib.entries.keys()[0]
 	entry = bib.entries[key1].fields
-	authorList = []
-	for p in bib.entries[key1].persons["author"]:
-		authorList.append(unicode(p))
+	authorList = [unicode(p) for p in bib.entries[key1].persons["author"]]
 	fields = {
 		"journal" : entry.get("journal"),
 		"year" : entry.get("year"),
 		"url" : entry.get("url"),
-		"authors" : " and ".join(authorList)
+		"authors" : authorList
 	}
 	# create and return dict with None values removed
 	result = dict((k, v) for k, v in fields.iteritems() if v)
@@ -285,6 +283,8 @@ def getFileDOI(pdf):
 	maxLength = 80
 	title = _getPaperTitle(pdf)
 	os.system('clear')
+	ctitle = num = colored(title, attrs=['bold'])
+	print("Query: %s\n" % ctitle)
 	print("Searching title on crossref.org ...\n")
 	results = _getTitleDOI(title)
 	if results:
@@ -298,10 +298,12 @@ def getFileDOI(pdf):
 			print("%s %s" % (num, titleShort))
 			print("    (%s)" % DOI)
 		print("")
-		opts = ["s", "S"] + [str(x) for x in range(1, 11)]
-		selected = _promptInput('Enter number or [s]kip: ', opts)
+		opts = ["s", "S", "q", "Q"] + [str(x) for x in range(1, 11)]
+		selected = _promptInput('Enter number, [S]kip or [Q]uit: ', opts)
 		if selected.lower() == "s":
 			return None
+		elif selected.lower() == "q":
+			sys.exit(0)
 		else:
 			return results[int(selected)-1]
 	else:

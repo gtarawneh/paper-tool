@@ -142,11 +142,10 @@ def checkLibrary(libDir):
 
 def startConsole(libDir, mode = "content"):
 	if mode == "content":
-		content, indexList, infoList =  loadLibraryContent(libDir)
+		content, indexList, infoList = loadLibraryContent(libDir)
 	else:
-		content, indexList, infoList =  loadLibraryTitles(libDir)
+		content, indexList, infoList = loadLibraryTitles(libDir)
 	searcher = console.Searcher(content, indexList, infoList)
-	getSuggestionFunc = getSuggestions
 	try:
 		con1 = console.Console(searcher, libDir)
 		con1.loopConsole()
@@ -154,6 +153,7 @@ def startConsole(libDir, mode = "content"):
 		con1.deinit()
 		traceback.print_exc(file=sys.stdout)
 		return
-	con1.deinit()
+	else:
+		con1.deinit()
 
 main()
