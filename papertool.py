@@ -3,11 +3,9 @@
 import os
 import sys
 import traceback
-import urllib2
 import math
 import json
 import console
-from paperbot import updateLibrary, writeJSON
 from docopt import docopt
 
 usage = """Papertool
@@ -36,6 +34,11 @@ def loadJSON(file):
 	except ValueError as e:
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
+
+def writeJSON(file, d):
+	# writes dictionary d to file
+	with open(file, 'w') as f:
+		json.dump(d, f, sort_keys = True, indent = 4, ensure_ascii=True)
 
 def loadLibraryContent(libDir):
 	with open(getAbsolutePath(libDir, senFile)) as f:
@@ -107,6 +110,8 @@ def main():
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
 	if args["update"]:
+		import urllib2
+		from paperbot import updateLibrary
 		try:
 			updateLibrary(libDir, args["--yes"])
 		except urllib2.HTTPError as e:
