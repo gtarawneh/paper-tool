@@ -56,13 +56,13 @@ def loadJSON(file):
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
 
-def getListBibtexFiles(bibDir):
+def getFileList(bibDir):
 	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
 	return files
 
 def getTextFile(entry):
 	# returns text file given a dictionary `entry` containing a pdf filename
-	tFile = entry["file"].replace(".pdf", ".txt")
+	tFile = entry["sha256"] + ".txt"
 	return tFile
 
 def updateLibrary(libDir, autoYes = False):
@@ -75,7 +75,8 @@ def updateLibrary(libDir, autoYes = False):
 	if "-l" in args:
 		_getLibPaperTitle(metaFile)
 		return
-	bibFiles = getListBibtexFiles(bibDir)
+	bibFiles = getFileList(bibDir)
+	textFiles = getFileList(textDir)
 	fileHash = getFileHash(pdfsDir)
 	dic = readJSON(metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
@@ -124,8 +125,10 @@ def updateLibrary(libDir, autoYes = False):
 					changes = True
 			print("")
 	# check for missing bibtex files
+	getBibFile = lambda entry : entry.get("sha256") + ".bib"
+	getTextFile = lambda entry : entry.get("sha256") + ".txt"
 	hasDOI = lambda entry : "DOI" in entry
-	hasBib = lambda entry : entry.get("sha256") + ".bib" in bibFiles
+	hasBib = lambda entry :  getBibFile(entry) in bibFiles
 	entriesMissingBib = [entry for entry in dic if hasDOI(entry) and not hasBib(entry)]
 	if entriesMissingBib:
 		n = len(entriesMissingBib)
@@ -149,12 +152,8 @@ def updateLibrary(libDir, autoYes = False):
 					print("FAILED")
 	# check for missing text files
 	rebuildSentences = False
-	entriesMissingText = []
-	for entry in dic:
-		tFile = getTextFile(entry)
-		tFileFull = getAbsolutePath(textDir, tFile)
-		if not os.path.isfile(tFileFull):
-			entriesMissingText.append(entry)
+	hasText = lambda entry : getTextFile(entry) in textFiles
+	entriesMissingText = [entry for entry in dic if hasDOI(entry) and not hasText(entry)]
 	if entriesMissingText:
 		n = len(entriesMissingText)
 		prompt = "There are %d new paper pdfs, extract text [Y/n]? " % n
@@ -188,10 +187,7 @@ def updateLibrary(libDir, autoYes = False):
 					f1.write(content)
 		writeJSON(iFileFull, indices)
 		writeJSON(metaFile, dic)
-	if changes:
-		print("Finished updating library")
-	else:
-		print("Library up to date")
+	print("Finished updating library" if changes else "Library up to date")
 
 def _getCitation(doi, style = "plain"):
 	url = "http://dx.doi.org/" + doi
