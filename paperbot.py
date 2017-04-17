@@ -9,7 +9,9 @@ import subprocess
 import urllib2
 import pybtex.database
 import codecs
-from termcolor import colored, cprint
+from termcolor import colored
+from termcolor import cprint
+from library import Library
 
 def getSHA256(file):
 	hasher = hashlib.sha256()
@@ -66,25 +68,20 @@ def getTextFile(entry):
 	return tFile
 
 def updateLibrary(libDir, autoYes = False):
-	pdfsDir = getAbsolutePath(libDir, "pdfs")
-	metaFile = getAbsolutePath(libDir, "meta/meta.json")
-	bibDir = getAbsolutePath(libDir, "bibtex")
-	textDir = getAbsolutePath(libDir, "text")
-	senDir = getAbsolutePath(libDir, "sentences")
+	lib = Library(libDir)
 	args = sys.argv[1:]
 	if "-l" in args:
 		_getLibPaperTitle(metaFile)
 		return
-	bibFiles = getFileList(bibDir)
-	textFiles = getFileList(textDir)
-	fileHash = getFileHash(pdfsDir)
-	dic = readJSON(metaFile)
+	bibFiles, textFiles = map(getFileList, [lib.bibDir, lib.txtDir])
+	fileHash = getFileHash(lib.pdfDir)
+	dic = readJSON(lib.metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
 	changes = False
 	# first, loop through files in the lib directory
 	fileList = []
 	for relFile, fileHash in fileHash.iteritems():
-		fullFile = os.path.join(pdfsDir, relFile)
+		fullFile = os.path.join(lib.pdfDir, relFile)
 		fileList.append(relFile)
 		existingEntry = hmap.get(fileHash, None)
 		if existingEntry:
@@ -115,13 +112,13 @@ def updateLibrary(libDir, autoYes = False):
 		selection = _promptInput(prompt, autoYes=autoYes)
 		if selection.lower() in ["y", ""]:
 			for entry in entriesMissingDOI:
-				fullFile = os.path.join(pdfsDir, entry["file"])
+				fullFile = lib.getFullFilePath(entry["file"], "pdf")
 				papInfo = getFileDOI(fullFile)
 				if papInfo:
 					entry["DOI"] = papInfo["DOI"]
 					entry["title"] = papInfo["title"]
 					entry["added"] = getDateTimeStamp()
-					writeJSON(metaFile, dic)
+					writeJSON(lib.metaFile, dic)
 					changes = True
 			print("")
 	# check for missing bibtex files
@@ -146,7 +143,7 @@ def updateLibrary(libDir, autoYes = False):
 						f.write(bibStr)
 					bibInfo = _parseBibtex(bibStr)
 					entry.update(bibInfo)
-					writeJSON(metaFile, dic)
+					writeJSON(lib.metaFile, dic)
 					print("done")
 				else:
 					print("FAILED")
@@ -161,22 +158,16 @@ def updateLibrary(libDir, autoYes = False):
 		if selection.lower() in ["y", ""]:
 			changes = True
 			for entry in entriesMissingText:
-				pFile = entry["file"]
-				tFile = getTextFile(entry)
-				pFileFull = getAbsolutePath(pdfsDir, pFile)
-				tFileFull = getAbsolutePath(textDir, tFile)
-				print "Extracting text from %s ... " % pFile
+				pFileFull = lib.getFullFilePath(entry["file"], "pdf")
+				tFileFull = lib.getFullFilePath(getTextFile(entry), "text")
+				print "Extracting text from %s ... " % entry["file"]
 				convertPDF(pFileFull, tFileFull)
 			rebuildSentences = True
 	# rebuild sentences
 	if rebuildSentences:
 		print "Updating sentence files ..."
-		sFile = "sentences.txt"
-		iFile = "index.json"
-		sFileFull = getAbsolutePath(senDir, sFile)
-		iFileFull = getAbsolutePath(senDir, iFile)
 		indices = []
-		with open(sFileFull, "w") as f1:
+		with open(lib.senFile, "w") as f1:
 			for index, entry in enumerate(dic):
 				tFile = getTextFile(entry)
 				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
@@ -185,8 +176,8 @@ def updateLibrary(libDir, autoYes = False):
 					lines = content.count("\n")
 					indices += [index] * lines
 					f1.write(content)
-		writeJSON(iFileFull, indices)
-		writeJSON(metaFile, dic)
+		writeJSON(lib.indFile, indices)
+		writeJSON(lib.metaFile, dic)
 	print("Finished updating library" if changes else "Library up to date")
 
 def _getCitation(doi, style = "plain"):
