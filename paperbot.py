@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
@@ -44,24 +44,14 @@ def getFileHash(libDir):
 			dic[relFile] = getSHA256(fullFile)
 	return dic
 
-def loadJSON(file):
-	try:
-		with open(file) as f:
-			return json.load(f)
-	except ValueError as e:
-		print(e)
-		raise Exception('Error encountered while parsing %s' % file)
-
-def getFileList(bibDir):
-	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
-	return files
-
 def updateLibrary(libDir, autoYes = False):
 	lib = Library(libDir)
 	args = sys.argv[1:]
 	if "-l" in args:
 		_getLibPaperTitle(metaFile)
 		return
+	getFileList = lambda bibDir: [f for f in os.listdir(bibDir) if
+		os.path.isfile(os.path.join(bibDir, f))]
 	bibFiles, textFiles = map(getFileList, [lib.bibDir, lib.txtDir])
 	fileHash = getFileHash(lib.pdfDir)
 	dic = readJSON(lib.metaFile)
