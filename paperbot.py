@@ -263,6 +263,8 @@ def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
 def getFileDOI(pdf):
 	maxLength = 80
 	title = _getPaperTitle(pdf)
+	if not title:
+		return None
 	os.system('clear')
 	ctitle = num = colored(title, attrs=['bold'])
 	print("Query: %s\n" % ctitle)
