@@ -140,7 +140,7 @@ def updateLibrary(libDir, autoYes = False):
 	# check for missing text files
 	rebuildSentences = False
 	hasText = lambda entry : getTextFile(entry) in textFiles
-	entriesMissingText = [entry for entry in dic if hasDOI(entry) and not hasText(entry)]
+	entriesMissingText = [entry for entry in dic if not hasText(entry)]
 	if entriesMissingText:
 		n = len(entriesMissingText)
 		prompt = "There are %d new paper pdfs, extract text [Y/n]? " % n
