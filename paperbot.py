@@ -20,9 +20,6 @@ def getSHA256(file):
 		hasher.update(buf)
 	return hasher.hexdigest()
 
-def getAbsolutePath(directory, file):
-	return os.path.join(directory, file)
-
 def writeJSON(file, d):
 	# writes dictionary d to file
 	with open(file, 'w') as f:
@@ -37,9 +34,6 @@ def readJSON(file):
 		return dic
 	else:
 		return []
-
-def getDateTimeStamp():
-	return str(datetime.datetime.now())
 
 def getFileHash(libDir):
 	dic = {}
@@ -62,11 +56,6 @@ def getFileList(bibDir):
 	files = [f for f in os.listdir(bibDir) if os.path.isfile(os.path.join(bibDir, f))]
 	return files
 
-def getTextFile(entry):
-	# returns text file given a dictionary `entry` containing a pdf filename
-	tFile = entry["sha256"] + ".txt"
-	return tFile
-
 def updateLibrary(libDir, autoYes = False):
 	lib = Library(libDir)
 	args = sys.argv[1:]
@@ -80,6 +69,7 @@ def updateLibrary(libDir, autoYes = False):
 	changes = False
 	# first, loop through files in the lib directory
 	fileList = []
+	stampDateTime = str(datetime.datetime.now())
 	for relFile, fileHash in fileHash.iteritems():
 		fullFile = os.path.join(lib.pdfDir, relFile)
 		fileList.append(relFile)
@@ -88,14 +78,14 @@ def updateLibrary(libDir, autoYes = False):
 			if relFile != existingEntry["file"]:
 				print("file moved: %s -> %s" % (existingEntry["file"], relFile))
 				existingEntry["file"] = relFile
-				existingEntry["added"] = getDateTimeStamp()
+				existingEntry["added"] = stampDateTime
 				changes = True
 		else:
 			print("found new file %s" % relFile)
 			dic.append({
 				"file": relFile,
 				"sha256": fileHash,
-				"added": getDateTimeStamp(),
+				"added": stampDateTime
 			});
 			changes = True
 	# check for deleted files
@@ -137,8 +127,8 @@ def updateLibrary(libDir, autoYes = False):
 				sys.stdout.write("Fetching bibtex record for %s ... " % entry["DOI"])
 				bibStr = _getBibtex(entry["DOI"])
 				if bibStr:
-					bibFile = "bibtex/" + entry["sha256"] + ".bib"
-					bibFileFull = getAbsolutePath(libDir, bibFile)
+					bibFile = entry["sha256"] + ".bib"
+					bibFileFull = lib.getFullFilePath(bibFile, "bibtex")
 					with codecs.open(bibFileFull, "w", "utf8") as f:
 						f.write(bibStr)
 					bibInfo = _parseBibtex(bibStr)
@@ -170,7 +160,7 @@ def updateLibrary(libDir, autoYes = False):
 		with open(lib.senFile, "w") as f1:
 			for index, entry in enumerate(dic):
 				tFile = getTextFile(entry)
-				tFileFull = getAbsolutePath(libDir, "text/" + tFile)
+				tFileFull = lib.getFullFilePath(tFile, "text")
 				with open(tFileFull, "r") as f2:
 					content = f2.read()
 					lines = content.count("\n")
