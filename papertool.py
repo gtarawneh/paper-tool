@@ -7,6 +7,7 @@ import math
 import json
 import console
 from docopt import docopt
+from library import Library
 
 usage = """Papertool
 
@@ -39,20 +40,6 @@ def writeJSON(file, d):
 	# writes dictionary d to file
 	with open(file, 'w') as f:
 		json.dump(d, f, sort_keys = True, indent = 4, ensure_ascii=True)
-
-def loadLibraryContent(libDir):
-	with open(getAbsolutePath(libDir, senFile)) as f:
-		content = f.read().splitlines()
-	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
-	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
-	return (content, indexList, infoList)
-
-def loadLibraryTitles(libDir):
-	infoList = loadJSON(getAbsolutePath(libDir, infoFile))
-	indexList = loadJSON(getAbsolutePath(libDir, indexFile))
-	content = [entry.get("title", "(unidentifier paper)") for entry in infoList]
-	indexList = range(len(infoList))
-	return (content, indexList, infoList)
 
 def getAbsolutePath(libDir, file):
 	return os.path.join(libDir, file)
@@ -109,6 +96,7 @@ def main():
 		return
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
+	lib = Library(libDir)
 	if args["update"]:
 		import urllib2
 		from paperbot import updateLibrary
@@ -118,36 +106,21 @@ def main():
 			print "http error, library update aborted"
 			print "code: %d" % e.code
 			print "reason: %s" % e.reason
-	elif libDir and checkLibrary(libDir):
-		mode = "content" if args["text"] else "titles"
-		startConsole(libDir, mode)
 	else:
-		print "Cannot find library %s" % libName
+		libExists, errMsg = lib.checkLibrary()
+		if libExists:
+			mode = "text" if args["text"] else "titles"
+			startConsole(lib, mode)
+		else:
+			print errMsg
 
-def checkLibrary(libDir):
-	# returns true when libDir and necessary files exist, False otherwise
-	if not os.path.exists(libDir):
-		print('directory \'%s\' does not exist' % libDir)
-		return False
-	libFiles = [
-		os.path.join(libDir, senFile),
-		os.path.join(libDir, infoFile),
-		os.path.join(libDir, indexFile),
-	]
-	for f in libFiles:
-		if not os.path.isfile(f):
-			print('library file \'%s\' does not exist' % f)
-			return False
-	return True
-
-def startConsole(libDir, mode = "content"):
-	if mode == "content":
-		content, indexList, infoList = loadLibraryContent(libDir)
-	else:
-		content, indexList, infoList = loadLibraryTitles(libDir)
+def startConsole(lib, mode = "text"):
+	infoList = lib.getMeta()
+	indexList = lib.getIndex() if mode == "text" else range(len(infoList))
+	content = lib.getSentences() if mode == "text" else lib.getPaperTitles()
 	searcher = console.Searcher(content, indexList, infoList)
 	try:
-		con1 = console.Console(searcher, libDir)
+		con1 = console.Console(searcher, lib.libDir)
 		con1.loopConsole()
 	except Exception as err:
 		con1.deinit()
