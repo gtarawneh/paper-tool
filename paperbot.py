@@ -57,6 +57,12 @@ def updateLibrary(libDir, autoYes = False):
 	dic = readJSON(lib.metaFile)
 	hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
 	changes = False
+	# Prepare some lambdas
+	getBibFile = lambda entry : entry.get("sha256") + ".bib"
+	getTextFile = lambda entry : entry.get("sha256") + ".txt"
+	hasDOI = lambda entry : "DOI" in entry and entry["DOI"]
+	hasBib = lambda entry : getBibFile(entry) in bibFiles
+	hasText = lambda entry : getTextFile(entry) in textFiles
 	# first, loop through files in the lib directory
 	fileList = []
 	stampDateTime = str(datetime.datetime.now())
@@ -85,7 +91,7 @@ def updateLibrary(libDir, autoYes = False):
 		dic.remove(entry)
 		changes = True
 	# check for missing DOIs/titles
-	entriesMissingDOI = [entry for entry in dic if not entry.get("DOI") or not entry.get("title")]
+	entriesMissingDOI = [entry for entry in dic if not "DOI" in entry or not "title" in entry]
 	if entriesMissingDOI:
 		n = len(entriesMissingDOI)
 		prompt = "There are %d new paper entries, search for title and DOI [Y/n]? " % n
@@ -102,10 +108,6 @@ def updateLibrary(libDir, autoYes = False):
 					changes = True
 			print("")
 	# check for missing bibtex files
-	getBibFile = lambda entry : entry.get("sha256") + ".bib"
-	getTextFile = lambda entry : entry.get("sha256") + ".txt"
-	hasDOI = lambda entry : "DOI" in entry
-	hasBib = lambda entry :  getBibFile(entry) in bibFiles
 	entriesMissingBib = [entry for entry in dic if hasDOI(entry) and not hasBib(entry)]
 	if entriesMissingBib:
 		n = len(entriesMissingBib)
@@ -129,7 +131,6 @@ def updateLibrary(libDir, autoYes = False):
 					print("FAILED")
 	# check for missing text files
 	rebuildSentences = False
-	hasText = lambda entry : getTextFile(entry) in textFiles
 	entriesMissingText = [entry for entry in dic if not hasText(entry)]
 	if entriesMissingText:
 		n = len(entriesMissingText)
