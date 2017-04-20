@@ -97,7 +97,7 @@ def updateLibrary(libDir, autoYes = False):
 				if papInfo:
 					entry["DOI"] = papInfo["DOI"]
 					entry["title"] = papInfo["title"]
-					entry["added"] = getDateTimeStamp()
+					entry["added"] = stampDateTime
 					writeJSON(lib.metaFile, dic)
 					changes = True
 			print("")
