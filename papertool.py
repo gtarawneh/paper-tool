@@ -33,25 +33,9 @@ def loadJSON(file):
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
 
-def getAbsolutePath(libDir, file):
-	return os.path.join(libDir, file)
-
-def getSuggestions(content, subList, keys, maxCount):
-	results = []
-	searchedLines = 0
-	for i in subList:
-		line = content[i]
-		searchedLines += 1
-		matches = [line.lower().find(k.lower()) for k in keys]
-		if not -1 in matches:
-			results.append(i)
-			if len(results) >= maxCount:
-				return (results, searchedLines)
-	return results
-
 def loadOptions():
 	homeDir = os.getenv("HOME")
-	fullOptionsFile = getAbsolutePath(homeDir, optionsfile)
+	fullOptionsFile = os.path.join(homeDir, optionsfile)
 	if os.path.isfile(fullOptionsFile):
 		return loadJSON(fullOptionsFile)
 	else:
