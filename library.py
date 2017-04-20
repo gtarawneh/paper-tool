@@ -9,21 +9,23 @@ class Library:
 	bibDir = None
 	txtDir = None
 	senDir = None
+	metaDir = None
 	senFile = None
 	indFile = None
 
 	def __init__(self, libDir):
 		self.libDir = libDir
-		self.pdfDir = Library.__getAbsolutePath(libDir, "pdfs")
-		self.bibDir = Library.__getAbsolutePath(libDir, "bibtex")
-		self.txtDir = Library.__getAbsolutePath(libDir, "text")
-		self.senDir = Library.__getAbsolutePath(libDir, "sentences")
-		self.metaFile = Library.__getAbsolutePath(libDir, "meta/meta.json")
-		self.senFile = Library.__getAbsolutePath(self.senDir, "sentences.txt")
-		self.indFile = Library.__getAbsolutePath(self.senDir, "index.json")
+		self.pdfDir = Library._getAbsolutePath(libDir, "pdfs")
+		self.bibDir = Library._getAbsolutePath(libDir, "bibtex")
+		self.txtDir = Library._getAbsolutePath(libDir, "text")
+		self.senDir = Library._getAbsolutePath(libDir, "sentences")
+		self.metaDir = Library._getAbsolutePath(libDir, "meta")
+		self.metaFile = Library._getAbsolutePath(self.metaDir, "meta.json")
+		self.senFile = Library._getAbsolutePath(self.senDir, "sentences.txt")
+		self.indFile = Library._getAbsolutePath(self.senDir, "index.json")
 
 	@staticmethod
-	def __getAbsolutePath(directory, file):
+	def _getAbsolutePath(directory, file):
 		if directory and file:
 			return os.path.join(directory, file)
 		else:
@@ -40,7 +42,7 @@ class Library:
 		}
 		subDir = subDirs.get(fileType, None)
 		if subDir:
-			return Library.__getAbsolutePath(subDir, fileName)
+			return Library._getAbsolutePath(subDir, fileName)
 		else:
 			raise Exception("Incorrect file type: %s" % fileType)
 
@@ -59,6 +61,26 @@ class Library:
 			if not os.path.isfile(file):
 				return (False, 'library file \'%s\' does not exist' % file)
 		return (True, None)
+
+	def create(self):
+		# create directory structure:
+		libDirs = [
+			self.libDir,
+			self.metaDir,
+			self.pdfDir,
+			self.bibDir,
+			self.txtDir,
+			self.senDir
+		]
+		map(os.makedirs, libDirs)
+		# create empty files:
+		emptyJSON = "[]"
+		with open(self.metaFile, "w") as fid:
+			fid.write(emptyJSON)
+		with open(self.indFile, "w") as fid:
+			fid.write(emptyJSON)
+		with open(self.senFile, "w") as fid:
+			pass
 
 	def getMeta(self):
 		return Library._loadJSON(self.metaFile)

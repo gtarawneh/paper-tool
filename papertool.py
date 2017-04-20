@@ -15,7 +15,7 @@ Usage:
   papertool [--lib=<lib>]
   papertool text [--lib=<lib>]
   papertool update [--yes] [--lib=<lib>]
-  papertool create <lib> <libdir>
+  papertool create <libdir>
 
 Options:
   --lib=<lib>    Specify library to use
@@ -23,9 +23,6 @@ Options:
 
 """
 
-senFile = 'sentences/sentences.txt'
-infoFile = 'meta/meta.json'
-indexFile = 'sentences/index.json'
 optionsfile = '.papertool'
 
 def loadJSON(file):
@@ -35,11 +32,6 @@ def loadJSON(file):
 	except ValueError as e:
 		print(e)
 		raise Exception('Error encountered while parsing %s' % file)
-
-def writeJSON(file, d):
-	# writes dictionary d to file
-	with open(file, 'w') as f:
-		json.dump(d, f, sort_keys = True, indent = 4, ensure_ascii=True)
 
 def getAbsolutePath(libDir, file):
 	return os.path.join(libDir, file)
@@ -65,34 +57,13 @@ def loadOptions():
 	else:
 		return {}
 
-def createLib(libName, parentDir):
-	libDir = getAbsolutePath(parentDir, libName)
-	metaDir = getAbsolutePath(libDir, "meta")
-	textDir = getAbsolutePath(libDir, "text")
-	senDir = getAbsolutePath(libDir, "sentences")
-	pdfDir = getAbsolutePath(libDir, "pdfs")
-	bibDir = getAbsolutePath(libDir, "bibtex")
-	# create sub-directories
-	for subdir in [metaDir, textDir, senDir, pdfDir, bibDir]:
-		try:
-			os.makedirs(subdir)
-		except:
-			pass
-	# create empty files
-	metaFile = getAbsolutePath(metaDir, "meta.json")
-	indexFile = getAbsolutePath(senDir, "index.json")
-	senFile = getAbsolutePath(senDir, "sentences.txt")
-	writeJSON(metaFile, [])
-	writeJSON(indexFile, [])
-	with open(senFile, "w") as f:
-		pass
-
 def main():
 	options = loadOptions()
 	args = docopt(usage, version="Papertool 0.1")
 	if args["create"]:
-		createLib(args["<lib>"], args["<libdir>"])
-		print "Library <%s> created successfully" % args["<lib>"]
+		lib = Library(args["<libdir>"])
+		lib.create()
+		print "Library created successfully"
 		return
 	libName = args["--lib"] if args["--lib"] else options["default"]
 	libDir = options.get(libName)
