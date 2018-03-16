@@ -13,6 +13,7 @@ from termcolor import colored
 from termcolor import cprint
 from library import Library
 
+
 def getSHA256(file):
     hasher = hashlib.sha256()
     with open(file, 'rb') as afile:
@@ -20,10 +21,12 @@ def getSHA256(file):
         hasher.update(buf)
     return hasher.hexdigest()
 
+
 def writeJSON(file, d):
     # writes dictionary d to file
     with open(file, 'w') as f:
-        json.dump(d, f, sort_keys = True, indent = 4, ensure_ascii=True)
+        json.dump(d, f, sort_keys=True, indent=4, ensure_ascii=True)
+
 
 def readJSON(file):
     # reads dictionary from file
@@ -35,6 +38,7 @@ def readJSON(file):
     else:
         return []
 
+
 def getFileHash(libDir):
     dic = {}
     for root, dirs, files in os.walk(libDir):
@@ -44,7 +48,8 @@ def getFileHash(libDir):
             dic[relFile] = getSHA256(fullFile)
     return dic
 
-def updateLibrary(libDir, autoYes = False):
+
+def updateLibrary(libDir, autoYes=False):
     lib = Library(libDir)
     args = sys.argv[1:]
     if "-l" in args:
@@ -55,14 +60,14 @@ def updateLibrary(libDir, autoYes = False):
     bibFiles, textFiles = map(getFileList, [lib.bibDir, lib.txtDir])
     fileHash = getFileHash(lib.pdfDir)
     dic = readJSON(lib.metaFile)
-    hmap = {entry["sha256"]:entry for entry in dic} # sha256 -> dic entry
+    hmap = {entry["sha256"]: entry for entry in dic}  # sha256 -> dic entry
     changes = False
     # Prepare some lambdas
-    getBibFile = lambda entry : entry.get("sha256") + ".bib"
-    getTextFile = lambda entry : entry.get("sha256") + ".txt"
-    hasDOI = lambda entry : "DOI" in entry and entry["DOI"]
-    hasBib = lambda entry : getBibFile(entry) in bibFiles
-    hasText = lambda entry : getTextFile(entry) in textFiles
+    getBibFile = lambda entry: entry.get("sha256") + ".bib"
+    getTextFile = lambda entry: entry.get("sha256") + ".txt"
+    hasDOI = lambda entry: "DOI" in entry and entry["DOI"]
+    hasBib = lambda entry: getBibFile(entry) in bibFiles
+    hasText = lambda entry: getTextFile(entry) in textFiles
     # first, loop through files in the lib directory
     fileList = []
     stampDateTime = str(datetime.datetime.now())
@@ -72,7 +77,8 @@ def updateLibrary(libDir, autoYes = False):
         existingEntry = hmap.get(fileHash, None)
         if existingEntry:
             if relFile != existingEntry["file"]:
-                print("file moved: %s -> %s" % (existingEntry["file"], relFile))
+                print("file moved: %s -> %s" % (existingEntry["file"],
+                                                relFile))
                 existingEntry["file"] = relFile
                 existingEntry["added"] = stampDateTime
                 changes = True
@@ -82,7 +88,7 @@ def updateLibrary(libDir, autoYes = False):
                 "file": relFile,
                 "sha256": fileHash,
                 "added": stampDateTime
-            });
+            })
             changes = True
     # check for deleted files
     delFiles = [entry for entry in dic if entry["file"] not in fileList]
@@ -91,7 +97,9 @@ def updateLibrary(libDir, autoYes = False):
         dic.remove(entry)
         changes = True
     # check for missing DOIs/titles
-    entriesMissingDOI = [entry for entry in dic if not "DOI" in entry or not "title" in entry]
+    entriesMissingDOI = [
+        entry for entry in dic if not "DOI" in entry or not "title" in entry
+    ]
     if entriesMissingDOI:
         n = len(entriesMissingDOI)
         prompt = "There are %d new paper entries, search for title and DOI [Y/n]? " % n
@@ -108,7 +116,9 @@ def updateLibrary(libDir, autoYes = False):
                     changes = True
             print("")
     # check for missing bibtex files
-    entriesMissingBib = [entry for entry in dic if hasDOI(entry) and not hasBib(entry)]
+    entriesMissingBib = [
+        entry for entry in dic if hasDOI(entry) and not hasBib(entry)
+    ]
     if entriesMissingBib:
         n = len(entriesMissingBib)
         prompt = "There are %d missing bibtex entries, attempt to fetch [Y/n]? " % n
@@ -116,7 +126,8 @@ def updateLibrary(libDir, autoYes = False):
         if selection.lower() in ["y", ""]:
             changes = True
             for entry in entriesMissingBib:
-                sys.stdout.write("Fetching bibtex record for %s ... " % entry["DOI"])
+                sys.stdout.write(
+                    "Fetching bibtex record for %s ... " % entry["DOI"])
                 bibStr = _getBibtex(entry["DOI"])
                 if bibStr:
                     bibFile = entry["sha256"] + ".bib"
@@ -161,20 +172,22 @@ def updateLibrary(libDir, autoYes = False):
         writeJSON(lib.metaFile, dic)
     print("Finished updating library" if changes else "Library up to date")
 
-def _getCitation(doi, style = "plain"):
+
+def _getCitation(doi, style="plain"):
     url = "http://dx.doi.org/" + doi
     styles = {
-        "bibtex" : "text/bibliography; style=bibtex",
-        "json" : "application/vnd.citationstyles.csl+json",
-        "plain" : "text/x-bibliography",
+        "bibtex": "text/bibliography; style=bibtex",
+        "json": "application/vnd.citationstyles.csl+json",
+        "plain": "text/x-bibliography",
     }
     selStyle = styles.get(style, styles["plain"])
-    request = urllib2.Request(url, headers = {"Accept" : selStyle})
+    request = urllib2.Request(url, headers={"Accept": selStyle})
     try:
         contents = urllib2.urlopen(request).read().decode("utf8")
         return contents
     except:
         return None
+
 
 def _parseBibtex(bibStr):
     bib = pybtex.database.parse_string(bibStr, "bibtex")
@@ -182,18 +195,20 @@ def _parseBibtex(bibStr):
     entry = bib.entries[key1].fields
     authorList = [unicode(p) for p in bib.entries[key1].persons["author"]]
     fields = {
-        "journal" : entry.get("journal"),
-        "year" : entry.get("year"),
-        "url" : entry.get("url"),
-        "authors" : authorList
+        "journal": entry.get("journal"),
+        "year": entry.get("year"),
+        "url": entry.get("url"),
+        "authors": authorList
     }
     # create and return dict with None values removed
     result = dict((k, v) for k, v in fields.iteritems() if v)
     return result
 
+
 def _reformatBibtex(bibStr):
     bib = pybtex.database.parse_string(bibStr, "bibtex")
     return bib.to_string('bibtex')
+
 
 def _getTitleDOI(title):
     # api doc: https://github.com/CrossRef/rest-api-doc/blob/master/rest_api.md
@@ -203,42 +218,46 @@ def _getTitleDOI(title):
     dic = json.loads(result)
     results = []
     for item in dic["message"]["items"]:
-        results.append({
-            "DOI": item["DOI"],
-            "title": item["title"][0]
-        })
+        results.append({"DOI": item["DOI"], "title": item["title"][0]})
     return results
+
 
 def _getBibtex(DOI):
     bibStr = _getCitation(DOI, "bibtex")
     return _reformatBibtex(bibStr) if bibStr else None
 
+
 def _readTitleFile():
     file = '/tmp/title.txt'
     with open(file, 'r') as f:
         lines = f.read().strip().split('\n')
-        return (' '.join(lines) if len(lines)>1 else lines[0])
+        return (' '.join(lines) if len(lines) > 1 else lines[0])
     return None
+
 
 def getLocalPath():
     # returns path of python script
     return os.path.dirname(os.path.realpath(sys.argv[0]))
+
 
 def _getPaperTitle(pdf):
     script = "shell/getTitle.sh"
     subprocess.call([script, pdf], cwd=getLocalPath())
     return _readTitleFile()
 
+
 def convertPDF(pdfFile, textFile):
     script = "shell/pdf2text.sh"
     subprocess.call([script, pdfFile, textFile], cwd=getLocalPath())
+
 
 def _getLibPaperTitle(metaFile):
     script = "shell/fzTitles.sh"
     subprocess.call([scriptPath, metaFile], cwd=getLocalPath())
     return _readTitleFile()
 
-def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
+
+def _promptInput(prompt, options=["y", "Y", "N", "n", ""], autoYes=False):
     if autoYes:
         return "y"
     else:
@@ -250,6 +269,7 @@ def _promptInput(prompt, options = ["y", "Y", "N", "n", ""], autoYes = False):
         except KeyboardInterrupt:
             print ""
             sys.exit(1)
+
 
 def getFileDOI(pdf):
     maxLength = 80
@@ -264,7 +284,7 @@ def getFileDOI(pdf):
     if results:
         print("Matches:\n")
         for ind, item in enumerate(results):
-            numStr = "%2d." % (ind+1)
+            numStr = "%2d." % (ind + 1)
             DOI = colored(item["DOI"], color='green', attrs=[])
             title = item["title"]
             titleShort = title[:maxLength] + (title[maxLength:] and ' ..')
@@ -279,6 +299,6 @@ def getFileDOI(pdf):
         elif selected.lower() == "q":
             sys.exit(0)
         else:
-            return results[int(selected)-1]
+            return results[int(selected) - 1]
     else:
         print("no results were found")
