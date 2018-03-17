@@ -35,17 +35,15 @@ def loadJSON(file):
         raise Exception('Error encountered while parsing %s' % file)
 
 
-def loadOptions():
-    homeDir = os.getenv("HOME")
-    fullOptionsFile = os.path.join(homeDir, optionsfile)
-    if os.path.isfile(fullOptionsFile):
-        return loadJSON(fullOptionsFile)
-    else:
-        return {}
+def load_options():
+    home_dir = os.getenv("HOME")
+    options_file = os.path.join(home_dir, optionsfile)
+    options_file_exist = os.path.isfile(options_file)
+    return loadJSON(options_file) if options_file_exist else {}
 
 
 def main():
-    options = loadOptions()
+    options = load_options()
     args = docopt(usage, version="Papertool 0.1")
     if args["create"]:
         lib = Library(args["<libdir>"])
