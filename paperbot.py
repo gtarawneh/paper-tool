@@ -14,7 +14,7 @@ from termcolor import cprint
 from library import Library
 
 
-def getSHA256(file):
+def get_SHA256(file):
     hasher = hashlib.sha256()
     with open(file, 'rb') as afile:
         buf = afile.read()
@@ -22,13 +22,13 @@ def getSHA256(file):
     return hasher.hexdigest()
 
 
-def writeJSON(file, d):
+def write_json(file, d):
     # writes dictionary d to file
     with open(file, 'w') as f:
         json.dump(d, f, sort_keys=True, indent=4, ensure_ascii=True)
 
 
-def readJSON(file):
+def read_json(file):
     # reads dictionary from file
     # returns [] if file does not exist
     if os.path.isfile(file):
@@ -39,17 +39,17 @@ def readJSON(file):
         return []
 
 
-def getFileHash(libDir):
+def get_file_hash(libDir):
     dic = {}
     for root, dirs, files in os.walk(libDir):
         for file in files:
             fullFile = os.path.abspath(os.path.join(root, file))
             relFile = os.path.relpath(fullFile, libDir)
-            dic[relFile] = getSHA256(fullFile)
+            dic[relFile] = get_SHA256(fullFile)
     return dic
 
 
-def updateLibrary(libDir, autoYes=False):
+def update_library(libDir, autoYes=False):
     lib = Library(libDir)
     args = sys.argv[1:]
     if "-l" in args:
@@ -58,8 +58,8 @@ def updateLibrary(libDir, autoYes=False):
     getFileList = lambda bibDir: [f for f in os.listdir(bibDir) if
         os.path.isfile(os.path.join(bibDir, f))]
     bibFiles, textFiles = map(getFileList, [lib.bibDir, lib.txtDir])
-    fileHash = getFileHash(lib.pdfDir)
-    dic = readJSON(lib.metaFile)
+    fileHash = get_file_hash(lib.pdfDir)
+    dic = read_json(lib.metaFile)
     hmap = {entry["sha256"]: entry for entry in dic}  # sha256 -> dic entry
     changes = False
     # Prepare some lambdas
@@ -112,7 +112,7 @@ def updateLibrary(libDir, autoYes=False):
                     entry["DOI"] = papInfo["DOI"]
                     entry["title"] = papInfo["title"]
                     entry["added"] = stampDateTime
-                    writeJSON(lib.metaFile, dic)
+                    write_json(lib.metaFile, dic)
                     changes = True
             print("")
     # check for missing bibtex files
@@ -136,7 +136,7 @@ def updateLibrary(libDir, autoYes=False):
                         f.write(bibStr)
                     bibInfo = _parseBibtex(bibStr)
                     entry.update(bibInfo)
-                    writeJSON(lib.metaFile, dic)
+                    write_json(lib.metaFile, dic)
                     print("done")
                 else:
                     print("FAILED")
@@ -168,8 +168,8 @@ def updateLibrary(libDir, autoYes=False):
                     lines = content.count("\n")
                     indices += [index] * lines
                     f1.write(content)
-        writeJSON(lib.indFile, indices)
-        writeJSON(lib.metaFile, dic)
+        write_json(lib.indFile, indices)
+        write_json(lib.metaFile, dic)
     print("Finished updating library" if changes else "Library up to date")
 
 

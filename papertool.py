@@ -55,9 +55,9 @@ def main():
     lib = Library(libDir)
     if args["update"]:
         import urllib2
-        from paperbot import updateLibrary
+        from paperbot import update_library
         try:
-            updateLibrary(libDir, args["--yes"])
+            update_library(libDir, args["--yes"])
         except urllib2.HTTPError as e:
             print "http error, library update aborted"
             print "code: %d" % e.code
